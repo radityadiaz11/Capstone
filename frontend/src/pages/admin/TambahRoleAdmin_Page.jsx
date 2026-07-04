@@ -210,7 +210,7 @@ function TambahRoleAdmin_Page() {
                                                     {u.role === 'guru' ? (u.mengampu_kelas || '-') : '-'}
                                                 </td>
                                                 <td style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9', textAlign: 'center' }}>
-                                                    <button onClick={() => handleOpenUserModal(u)} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', marginRight: '6px', fontSize: '11px', fontWeight: 600 }}>Edit</button>
+                                                    <button onClick={() => handleOpenUserModal(u)} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', marginRight: '6px', fontSize: '11px', fontWeight: 600, color: '#334155' }}>Edit</button>
                                                     <button onClick={() => handleDeleteUser(u.id)} style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#ef4444', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}>Hapus</button>
                                                 </td>
                                             </tr>

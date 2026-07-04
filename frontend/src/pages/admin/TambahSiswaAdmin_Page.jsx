@@ -206,7 +206,7 @@ function TambahSiswaAdmin_Page() {
                                                 <td style={{ textAlign: 'center' }}>
                                                     <button 
                                                         onClick={() => handleOpenModal(s)}
-                                                        style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}
+                                                        style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, color: '#334155' }}
                                                     >
                                                         Edit
                                                     </button>
