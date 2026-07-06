@@ -44,6 +44,10 @@ function TambahRoleAdmin_Page() {
 
     const handleSaveUser = async () => {
         try {
+            if (!isEditUser && !userForm.password) {
+                alert("Password tidak boleh kosong untuk pengguna baru.");
+                return;
+            }
             if (isEditUser) {
                 await api.put(`/users/${userForm.id}`, userForm);
             } else {

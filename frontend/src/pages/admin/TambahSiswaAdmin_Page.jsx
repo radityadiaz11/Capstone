@@ -46,15 +46,20 @@ function TambahSiswaAdmin_Page() {
 
     const handleSaveStudent = async () => {
         try {
+            const payload = { ...formData };
+            ['math_score', 'indo_score', 'eng_score', 'bio_score', 'chem_score', 'phy_score'].forEach(key => {
+                if (payload[key] === '') payload[key] = null;
+            });
+
             if (isEditMode) {
-                await api.put(`/students/${formData.id}`, formData);
+                await api.put(`/students/${payload.student_id}`, payload);
             } else {
-                await api.post('/students', formData);
+                await api.post('/students', payload);
             }
             setIsModalOpen(false);
             fetchData();
         } catch (err) {
-            alert("Gagal menyimpan data siswa");
+            alert("Gagal menyimpan data siswa: " + (err.response?.data?.message || err.message));
         }
     };
 

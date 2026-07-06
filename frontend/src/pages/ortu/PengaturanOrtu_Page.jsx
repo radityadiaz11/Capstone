@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../api/axios';
 import './PengaturanOrtu_Page.css';
 
 function PengaturanOrtu_Page() {
@@ -7,6 +8,31 @@ function PengaturanOrtu_Page() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Notification preferences state to enable toggle interaction
+  const [profile, setProfile] = useState({ nama: 'Bapak Hidayat', email: 'hidayat.nugroho@gmail.com', role: 'ortu' });
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({});
+
+  React.useEffect(() => {
+      const fetchProfile = async () => {
+          try {
+              const res = await api.get('/users/profile');
+              if (res.data.success) setProfile(res.data.data);
+          } catch (err) { console.error('Gagal memuat profil', err); }
+      };
+      fetchProfile();
+  }, []);
+
+  const handleSaveProfile = async () => {
+      try {
+          await api.put('/users/profile', editForm);
+          setProfile(editForm);
+          setIsEditOpen(false);
+          alert('Profil berhasil diperbarui');
+      } catch (err) {
+          alert('Gagal memperbarui profil');
+      }
+  };
+
   const [prefs, setPrefs] = useState({
     nilaiTurun: true,
     kehadiranRendah: true,
@@ -14,7 +40,7 @@ function PengaturanOrtu_Page() {
     laporanMingguan: false,
   });
 
-  const handleLogout = () => {
+  const handleLogout = () => { localStorage.removeItem('token'); localStorage.removeItem('role');
     navigate('/');
   };
 
@@ -156,7 +182,7 @@ function PengaturanOrtu_Page() {
               <div className="po-avatar-section">
                 <div className="po-profile-avatar">HN</div>
                 <div className="po-profile-meta">
-                  <h4 className="po-profile-name-full">Bapak Hidayat Nugroho</h4>
+                  <h4 className="po-profile-name-full">{profile.nama}</h4>
                   <p className="po-profile-desc">Orang Tua Farhan Hidayat · XII IPA 1</p>
                 </div>
               </div>
@@ -178,7 +204,7 @@ function PengaturanOrtu_Page() {
                 </div>
               </div>
 
-              <button className="po-edit-btn">Edit profil</button>
+              <button className="po-edit-btn" onClick={() => { setEditForm({ ...profile, password: '' }); setIsEditOpen(true); }}>Edit profil</button>
             </section>
 
             {/* Right Card: Preferensi Notifikasi */}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../api/axios';
 import './DashboardPage.css'; // Premium shell and sidebar styles
 import './Pengaturan_Page.css';
 
@@ -100,6 +101,30 @@ function Topbar({ title = 'Pengaturan', subtitle = 'Kelola profil dan konfiguras
 
 export default function Pengaturan_Page() {
     const navigate = useNavigate();
+    const [profile, setProfile] = useState({ nama: 'Ibu Sari', email: '{profile.email}', mengampu_kelas: 'XII IPA 1', role: 'guru' });
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editForm, setEditForm] = useState({});
+
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) setProfile(res.data.data);
+            } catch (err) { console.error('Gagal memuat profil', err); }
+        };
+        fetchProfile();
+    }, []);
+
+    const handleSaveProfile = async () => {
+        try {
+            await api.put('/users/profile', editForm);
+            setProfile(editForm);
+            setIsEditOpen(false);
+            alert('Profil berhasil diperbarui');
+        } catch (err) {
+            alert('Gagal memperbarui profil');
+        }
+    };
 
     const handleNavigate = (id) => {
         if (id === 'dashboard') navigate('/dashboard');
@@ -135,7 +160,7 @@ export default function Pengaturan_Page() {
                                 <div className="set-profile-section">
                                     <div className="set-avatar-circle">SR</div>
                                     <div className="set-profile-meta">
-                                        <h2 className="set-profile-name">Ibu Sari Rahayu</h2>
+                                        <h2 className="set-profile-name">{profile.nama}</h2>
                                         <span className="set-profile-desc">Wali Kelas XII IPA 1 &middot; Guru Biologi</span>
                                     </div>
                                 </div>
@@ -147,7 +172,7 @@ export default function Pengaturan_Page() {
                                     </div>
                                     <div className="set-field-row">
                                         <span className="set-field-label">Kelas diampu</span>
-                                        <span className="set-field-val font-semibold">XII IPA 1</span>
+                                        <span className="set-field-val font-semibold">{profile.mengampu_kelas || 'XII IPA 1'}</span>
                                     </div>
                                     <div className="set-field-row">
                                         <span className="set-field-label">Role</span>
@@ -158,7 +183,7 @@ export default function Pengaturan_Page() {
                                 </div>
 
                                 <div className="set-card-footer">
-                                    <button className="set-action-btn" type="button">Edit profil</button>
+                                    <button className="set-action-btn" type="button" onClick={() => { setEditForm({ ...profile, password: '' }); setIsEditOpen(true); }}>Edit profil</button>
                                 </div>
                             </div>
 

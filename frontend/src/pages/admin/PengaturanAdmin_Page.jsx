@@ -1,11 +1,35 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../api/axios';
 import './PengaturanAdmin_Page.css';
 
 function PengaturanAdmin_Page() {
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [profile, setProfile] = useState({ nama: 'Bapak Hartono', email: '{profile.email}', role: 'admin' });
+    const [editForm, setEditForm] = useState({});
+
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) setProfile(res.data.data);
+            } catch (err) { console.error('Gagal memuat profil', err); }
+        };
+        fetchProfile();
+    }, []);
+
+    const handleSaveProfile = async () => {
+        try {
+            await api.put('/users/profile', editForm);
+            setProfile(editForm);
+            setIsEditing(false);
+            alert('Profil berhasil diperbarui');
+        } catch (err) {
+            alert('Gagal memperbarui profil');
+        }
+    };
 
     const handleLogout = () => {
         navigate('/');
@@ -166,7 +190,7 @@ function PengaturanAdmin_Page() {
                             {/* Edit Button */}
                             <button
                                 className="pga-edit-btn"
-                                onClick={() => setIsEditing(!isEditing)}
+                                onClick={() => { if(!isEditing) { setEditForm({ ...profile, password: '' }); setIsEditing(true); } else setIsEditing(false); }}
                             >
                                 {isEditing ? 'Simpan profil' : 'Edit profil'}
                             </button>

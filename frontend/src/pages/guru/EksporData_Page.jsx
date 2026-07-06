@@ -3,216 +3,351 @@ import { useNavigate } from 'react-router-dom';
 import './EksporData_Page.css';
 import api from '../../api/axios';
 
-/* ── Mock data for sidebar ───────────────────────────────────────── */
-const navMenu = [
-  {
-    group: 'MENU UTAMA',
-    items: [
-      { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
-      { id: 'prediksi', label: 'Prediksi Siswa', icon: '◎' },
-      { id: 'nilai', label: 'Data Nilai', icon: '≡' },
-      { id: 'monitoring', label: 'Monitoring Kelas', icon: '◫' },
-      { id: 'tambah-siswa', label: 'Tambah Data Siswa', icon: '✚' },
-    ],
-  },
-  {
-    group: 'LAPORAN',
-    items: [
-      { id: 'statistik', label: 'Statistik SNBP', icon: '⊟' },
-      { id: 'ekspor', label: 'Ekspor Data', icon: '↓' },
-    ],
-  },
-];
+function EksporData_Page() {
+    const navigate = useNavigate();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [loadingItem, setLoadingItem] = useState(null);
 
-/* ── Sidebar & Topbar Components ─────────────────────────────────── */
-function Sidebar({ active, onNavigate }) {
-  return (
-    <aside className="db-sidebar">
-      <div className="db-sidebar-brand">
-        <span className="db-brand-title">SNBP Monitor</span>
-        <span className="db-brand-sub">Sistem Cerdas Kesiapan Siswa</span>
-      </div>
+    const handleLogout = () => {
+        navigate('/');
+    };
 
-      <nav className="db-nav">
-        {navMenu.map((section) => (
-          <div key={section.group} className="db-nav-group">
-            <span className="db-nav-group-label">{section.group}</span>
-            {section.items.map((item) => (
-              <button
-                key={item.id}
-                className={`db-nav-item${active === item.id ? ' active' : ''}`}
-                onClick={() => onNavigate(item.id)}
-                type="button"
-              >
-                <span className="db-nav-icon">{item.icon}</span>
-                {item.label}
-              </button>
-            ))}
-          </div>
-        ))}
-      </nav>
+    const [statsData, setStatsData] = useState([]);
+    const [riwayatEkspor, setRiwayatEkspor] = useState([
+        { label: 'Laporan Kesiapan April 2026', type: 'PDF', typeClass: 'ekd-badge-pdf' },
+        { label: 'Data Nilai Sem. 5 Semua Kelas', type: 'Excel', typeClass: 'ekd-badge-excel' },
+        { label: 'Laporan Kesiapan Maret 2026', type: 'PDF', typeClass: 'ekd-badge-pdf' },
+    ]);
+    
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await api.get('/dashboard/snbp-stats');
+                if (res.data.success && res.data.data.kelasPerforma) {
+                    setStatsData(res.data.data.kelasPerforma);
+                }
+            } catch (error) {
+                console.error('Error fetching stats for report:', error);
+            }
+        };
+        fetchStats();
+    }, []);
 
-      <div className="db-sidebar-bottom">
-        <button
-          className={`db-nav-item${active === 'notifikasi-settings' ? ' active' : ''}`}
-          onClick={() => onNavigate('notifikasi-settings')}
-          type="button"
-        >
-          <span className="db-nav-icon">🔔</span>
-          Notifikasi
-        </button>
-        <button
-          className={`db-nav-item${active === 'pengaturan' ? ' active' : ''}`}
-          onClick={() => onNavigate('pengaturan')}
-          type="button"
-        >
-          <span className="db-nav-icon">⚙</span>
-          Pengaturan
-        </button>
-        <button
-          className="db-nav-item db-nav-logout"
-          onClick={() => onNavigate('keluar')}
-          type="button"
-        >
-          <span className="db-nav-icon">⏻</span>
-          Keluar
-        </button>
-      </div>
-    </aside>
-  );
-}
+    const handleExport = (type) => {
+        setLoadingItem(type);
+        setTimeout(() => {
+            setLoadingItem(null);
+            if (type === 'excel') {
+                api.get('/students')
+                    .then(res => {
+                        let studentsData = [];
+                        if (res.data && res.data.data) {
+                            studentsData = res.data.data;
+                        }
 
-function Topbar({ title = 'Ekspor Data', subtitle = 'Pilih data yang ingin diekspor' }) {
-  return (
-    <header className="db-topbar">
-      <div className="db-topbar-left">
-        <h1 className="db-page-title">{title}</h1>
-        <span className="db-page-sub">{subtitle}</span>
-      </div>
-      <div className="db-topbar-right">
-        <div className="db-profile-info">
-          <span className="db-profile-name">Ibu Sari</span>
-          <span className="db-profile-role">Wali Kelas XII IPA 1</span>
-        </div>
-        <div className="db-avatar">SR</div>
-      </div>
-    </header>
-  );
-}
+                        let tableHtml = `<html xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <head>
+    <meta charset="utf-8">
+    <!--[if gte mso 9]>
+    <xml>
+      <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+          <x:ExcelWorksheet>
+            <x:Name>Data Nilai Siswa</x:Name>
+            <x:WorksheetOptions>
+              <x:DisplayGridlines/>
+            </x:WorksheetOptions>
+          </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+      </x:ExcelWorkbook>
+    </xml>
+    <![endif]-->
+    <style>
+      th { background-color: #4CAF50; color: white; border: 1px solid #ddd; padding: 8px; }
+      td { border: 1px solid #ddd; padding: 8px; }
+    </style>
+  </head>
+  <body>
+    <table>
+      <thead>
+        <tr>
+          <th>ID Siswa</th>
+          <th>Nama Siswa</th>
+          <th>Matematika</th>
+          <th>B.Indonesia</th>
+          <th>Biologi</th>
+          <th>Kimia</th>
+          <th>Fisika</th>
+          <th>B.Inggris</th>
+          <th>Skor Ujian</th>
+        </tr>
+      </thead>
+      <tbody>`;
 
-/* ── Main Page Component ─────────────────────────────────────────── */
-export default function EksporData_Page() {
-  const navigate = useNavigate();
+                        studentsData.forEach(student => {
+                            const nama = student.nama || "Tanpa Nama";
+                            tableHtml += `
+        <tr>
+          <td>${student.student_id}</td>
+          <td>${nama}</td>
+          <td>${student.math_score || 0}</td>
+          <td>${student.indo_score || 0}</td>
+          <td>${student.bio_score || 0}</td>
+          <td>${student.chem_score || 0}</td>
+          <td>${student.phy_score || 0}</td>
+          <td>${student.eng_score || 0}</td>
+          <td>${student.exam_score || 0}</td>
+        </tr>`;
+                        });
 
-  const handleNavigate = (id) => {
-    if (id === 'dashboard') navigate('/dashboard');
-    if (id === 'prediksi') navigate('/prediksi-siswa');
-    if (id === 'nilai') navigate('/data-nilai');
-    if (id === 'monitoring') navigate('/monitoring-kelas');
-    if (id === 'tambah-siswa') navigate('/tambah-siswa');
-    if (id === 'statistik') navigate('/statistik-snbp');
-    if (id === 'ekspor') navigate('/ekspor-data');
-    if (id === 'notifikasi-settings') navigate('/notifikasi');
-    if (id === 'pengaturan') navigate('/pengaturan');
-    if (id === 'keluar') navigate('/');
-  };
+                        tableHtml += `
+      </tbody>
+    </table>
+  </body>
+</html>`;
 
-  const exportOptions = [
-    {
-      id: 'laporan',
-      title: 'Laporan kesiapan SNBP',
-      description: 'Ringkasan status kesiapan, prediksi, dan rekomendasi per siswa.',
-      btnLabel: 'Buat laporan',
-      format: 'PDF',
-      formatClass: 'fmt-pdf',
-    },
-    {
-      id: 'rapor',
-      title: 'Data nilai rapor siswa',
-      description: 'Semua nilai per mata pelajaran semester 1–4 dalam format spreadsheet.',
-      btnLabel: 'Ekspor Excel',
-      format: 'Excel',
-      formatClass: 'fmt-excel',
-    },
-  ];
+                        const blob = new Blob([tableHtml], { type: "application/vnd.ms-excel" });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", url);
+                        link.setAttribute("download", "Data_Nilai_Seluruh_Siswa.xls");
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        setTimeout(() => URL.revokeObjectURL(url), 100);
 
-  const exportHistory = [
-    {
-      id: 1,
-      name: 'Laporan Kesiapan April 2026',
-      format: 'PDF',
-      formatClass: 'fmt-pdf',
-    },
-    {
-      id: 2,
-      name: 'Data Nilai Sem. 5',
-      format: 'Excel',
-      formatClass: 'fmt-excel',
-    },
-    {
-      id: 4,
-      name: 'Laporan Kesiapan Maret 2026',
-      format: 'PDF',
-      formatClass: 'fmt-pdf',
-    },
-  ];
+                        const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                        const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                        setRiwayatEkspor(prev => [
+                            { label: `Data Nilai (${dateStr} ${timeStr})`, type: 'Excel', typeClass: 'ekd-badge-excel' },
+                            ...prev
+                        ]);
+                    })
+                    .catch(err => {
+                        console.error('Error fetching students for export:', err);
+                        alert('Gagal mengambil data untuk diekspor.');
+                    });
+            } else if (type === 'pdf') {
+                const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                setRiwayatEkspor(prev => [
+                    { label: `Laporan Kesiapan (${dateStr} ${timeStr})`, type: 'PDF', typeClass: 'ekd-badge-pdf' },
+                    ...prev
+                ]);
+                window.print();
+            }
+        }, 1800);
+    };
 
-  return (
-    <div className="db-shell">
-      {/* Sidebar with active state 'ekspor' */}
-      <Sidebar active="ekspor" onNavigate={handleNavigate} />
 
-      <div className="db-main">
-        {/* Topbar with correct titles */}
-        <Topbar title="Ekspor Data" subtitle="Pilih data yang ingin diekspor" />
 
-        {/* Content Section */}
-        <main className="db-content ekspor-content-wrapper">
-          <div className="ekspor-grid-row">
-            
-            {/* Left stack: export option cards */}
-            <div className="ekspor-options-stack">
-              {exportOptions.map((opt) => (
-                <div key={opt.id} className="db-card ekspor-opt-card">
-                  <div className="ekspor-opt-body">
-                    <div className="ekspor-opt-header">
-                      <h2 className="ekspor-opt-title">{opt.title}</h2>
-                      <span className={`ekspor-fmt-badge ${opt.formatClass}`}>{opt.format}</span>
+    return (
+        <div className="ekd-container">
+
+            {/* --- MOBILE HEADER --- */}
+            <div className="dbs-mobile-header">
+                <div className="dbs-mobile-brand">
+                    <span className="dbs-mobile-brand-title">SNBP Monitor</span>
+                    <span className="dbs-mobile-brand-sub">Sistem Cerdas Kesiapan Siswa</span>
+                </div>
+                <button
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    className="dbs-mobile-toggle"
+                    aria-label="Toggle Menu"
+                >
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">
+                        {isMobileMenuOpen ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        )}
+                    </svg>
+                </button>
+            </div>
+
+            {/* --- SIDEBAR --- */}
+            <aside className={`dbs-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+                <div>
+                    <div className="dbs-brand">
+                        <h1 className="dbs-brand-title">SNBP Monitor</h1>
+                        <p className="dbs-brand-sub">Sistem Cerdas Kesiapan Siswa</p>
                     </div>
-                    <p className="ekspor-opt-desc">{opt.description}</p>
-                    <button className="ekspor-action-btn" type="button">
-                      {opt.btnLabel} <span className="arrow-icon">↗</span>
+
+                    <nav className="dbs-nav">
+                        <div className="db-nav-group">
+                            <span className="db-nav-group-label">MENU UTAMA</span>
+                            <button className="dbs-nav-item" onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }} type="button">
+                                <span className="dbs-nav-icon">⊞</span><span>Dashboard</span>
+                            </button>
+                            <button className="dbs-nav-item" onClick={() => { navigate('/prediksi-siswa'); setIsMobileMenuOpen(false); }} type="button">
+                                <span className="dbs-nav-icon">◎</span><span>Prediksi Siswa</span>
+                            </button>
+                            <button className="dbs-nav-item" onClick={() => { navigate('/data-nilai'); setIsMobileMenuOpen(false); }} type="button">
+                                <span className="dbs-nav-icon">≡</span><span>Data Nilai</span>
+                            </button>
+                            <button className="dbs-nav-item" onClick={() => { navigate('/monitoring-kelas'); setIsMobileMenuOpen(false); }} type="button">
+                                <span className="dbs-nav-icon">◫</span><span>Monitoring Kelas</span>
+                            </button>
+                            <button className="dbs-nav-item" onClick={() => { navigate('/tambah-siswa'); setIsMobileMenuOpen(false); }} type="button">
+                                <span className="dbs-nav-icon">✚</span><span>Tambah Data Siswa</span>
+                            </button>
+                        </div>
+                        <div className="db-nav-group">
+                            <span className="db-nav-group-label" style={{ marginTop: '16px' }}>LAPORAN</span>
+                            <button className="dbs-nav-item" onClick={() => { navigate('/statistik-snbp'); setIsMobileMenuOpen(false); }} type="button">
+                                <span className="dbs-nav-icon">⊟</span><span>Statistik SNBP</span>
+                            </button>
+                            <button className="dbs-nav-item active" onClick={() => setIsMobileMenuOpen(false)} type="button">
+                                <span className="dbs-nav-icon">↓</span><span>Ekspor Data</span>
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+
+                <div className="dbs-sidebar-bottom">
+                    <button className="dbs-nav-item" onClick={() => { navigate('/notifikasi'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">🔔</span><span>Notifikasi</span>
                     </button>
-                  </div>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/pengaturan'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">⚙</span><span>Pengaturan</span>
+                    </button>
+                    <button onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('role'); navigate('/'); }} className="dbs-nav-item dbs-nav-logout">
+                        <span className="dbs-nav-icon">⏻</span><span>Keluar</span>
+                    </button>
                 </div>
-              ))}
-            </div>
+            </aside>
 
-            {/* Right stack: export history */}
-            <div className="ekspor-history-column">
-              <div className="db-card ekspor-history-card">
-                <div className="db-card-header no-border">
-                  <span className="db-card-title text-large">Riwayat ekspor</span>
-                </div>
+            {/* --- MAIN CONTENT --- */}
+            <div className="ekd-main">
 
-                <div className="ekspor-history-list">
-                  {exportHistory.map((hist) => (
-                    <div key={hist.id} className="ekspor-history-row">
-                      <span className="ekspor-history-name">{hist.name}</span>
-                      <span className={`ekspor-fmt-badge ${hist.formatClass}`}>{hist.format}</span>
+                {/* Topbar */}
+                <header className="dbs-topbar">
+                    <div className="dbs-page-info">
+                        <h2 className="dbs-page-title">Ekspor Data</h2>
+                        <p className="dbs-page-sub">Pilih data yang ingin diekspor</p>
                     </div>
-                  ))}
-                </div>
+                    <div className="dbs-profile-info">
+                        <div className="dbs-profile-text">
+                            <span className="dbs-profile-name">Ibu Sari</span>
+                            <span className="dbs-profile-role">Wali Kelas XII IPA 1</span>
+                        </div>
+                        <div className="dbs-avatar">SR</div>
+                    </div>
+                </header>
 
-                <div className="ekspor-history-footer">
-                  Semua file tersimpan 30 hari
-                </div>
-              </div>
+                {/* Content */}
+                <main className="ekd-content">
+                    <div className="ekd-grid">
+
+                        {/* ---- LEFT: Ekspor Cards ---- */}
+                        <div className="ekd-left">
+
+                            {/* Card 1: Laporan Kesiapan SNBP */}
+                            <div className="ekd-card">
+                                <div className="ekd-card-header">
+                                    <div>
+                                        <h3 className="ekd-card-title">Laporan kesiapan SNBP</h3>
+                                        <p className="ekd-card-desc">
+                                            Ringkasan status kesiapan dan rekomendasi per kelas.
+                                        </p>
+                                    </div>
+                                    <span className="ekd-badge ekd-badge-pdf">PDF</span>
+                                </div>
+                                <button
+                                    className={`ekd-btn ${loadingItem === 'pdf' ? 'ekd-btn-loading' : ''}`}
+                                    onClick={() => handleExport('pdf')}
+                                    disabled={loadingItem === 'pdf'}
+                                >
+                                    {loadingItem === 'pdf' ? (
+                                        <span className="ekd-spinner"></span>
+                                    ) : (
+                                        <>Buat laporan <span className="ekd-btn-arrow">↗</span></>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Card 2: Data Nilai Seluruh Siswa */}
+                            <div className="ekd-card">
+                                <div className="ekd-card-header">
+                                    <div>
+                                        <h3 className="ekd-card-title">Data nilai seluruh siswa</h3>
+                                        <p className="ekd-card-desc">
+                                            Semua nilai per mata pelajaran semester 1–5 dalam format spreadsheet.
+                                        </p>
+                                    </div>
+                                    <span className="ekd-badge ekd-badge-excel">Excel</span>
+                                </div>
+                                <button
+                                    className={`ekd-btn ${loadingItem === 'excel' ? 'ekd-btn-loading' : ''}`}
+                                    onClick={() => handleExport('excel')}
+                                    disabled={loadingItem === 'excel'}
+                                >
+                                    {loadingItem === 'excel' ? (
+                                        <span className="ekd-spinner"></span>
+                                    ) : (
+                                        <>Ekspor Excel <span className="ekd-btn-arrow">↗</span></>
+                                    )}
+                                </button>
+                            </div>
+
+
+
+                        </div>
+
+                        {/* ---- RIGHT: Riwayat Ekspor ---- */}
+                        <div className="ekd-right">
+                            <div className="ekd-card ekd-riwayat-card">
+                                <h3 className="ekd-card-title">Riwayat ekspor</h3>
+                                <div className="ekd-riwayat-list">
+                                    {riwayatEkspor.map((item, idx) => (
+                                        <div key={idx} className="ekd-riwayat-item">
+                                            <span className="ekd-riwayat-label">{item.label}</span>
+                                            <span className={`ekd-badge ${item.typeClass}`}>{item.type}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </main>
             </div>
 
-          </div>
-        </main>
-      </div>
-    </div>
-  );
+            {/* --- PRINTABLE REPORT (Hidden on screen, shown when printing) --- */}
+            <div className="print-report-container">
+                <div className="print-report-header">
+                    <h2>Laporan Kesiapan SNBP</h2>
+                    <p>Ringkasan status kesiapan dan rekomendasi per kelas</p>
+                    <p style={{ fontSize: '12px', color: '#666' }}>Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</p>
+                </div>
+                <table className="print-report-table">
+                    <thead>
+                        <tr>
+                            <th>Kelas</th>
+                            <th>Wali Kelas</th>
+                            <th>Aman</th>
+                            <th>Berisiko</th>
+                            <th>Rata-rata Kelas (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {statsData.length > 0 ? statsData.map((k, i) => (
+                            <tr key={k.kelas}>
+                                <td>{k.kelas}</td>
+                                <td>{k.wali || `Wali Kelas ${i + 1}`}</td>
+                                <td>{k.aman} Siswa</td>
+                                <td>{k.total - k.aman} Siswa</td>
+                                <td>{k.pct || 0}%</td>
+                            </tr>
+                        )) : (
+                            <tr><td colSpan="5" style={{ textAlign: 'center' }}>Data tidak tersedia</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    );
 }
+
+export default EksporData_Page;
