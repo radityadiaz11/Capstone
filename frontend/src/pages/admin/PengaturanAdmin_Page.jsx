@@ -143,10 +143,10 @@ function PengaturanAdmin_Page() {
                     </div>
                     <div className="dbs-profile-info">
                         <div className="dbs-profile-text">
-                            <span className="dbs-profile-name">Bapak Hartono</span>
+                            <span className="dbs-profile-name">{profile.nama || 'Bapak Hartono'}</span>
                             <span className="dbs-profile-role">Kepala Sekolah</span>
                         </div>
-                        <div className="dbs-avatar">HT</div>
+                        <div className="dbs-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'HT'}</div>
                     </div>
                 </header>
 

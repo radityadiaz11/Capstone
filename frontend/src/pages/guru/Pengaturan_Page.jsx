@@ -81,7 +81,7 @@ function Sidebar({ active, onNavigate }) {
     );
 }
 
-function Topbar({ title = 'Pengaturan', subtitle = 'Kelola profil dan konfigurasi sistem' }) {
+function Topbar({ title = 'Pengaturan', subtitle = 'Kelola profil dan konfigurasi sistem', profile = {} }) {
     return (
         <header className="db-topbar">
             <div className="db-topbar-left">
@@ -90,10 +90,10 @@ function Topbar({ title = 'Pengaturan', subtitle = 'Kelola profil dan konfiguras
             </div>
             <div className="db-topbar-right">
                 <div className="db-profile-info">
-                    <span className="db-profile-name">Ibu Sari</span>
-                    <span className="db-profile-role">Wali Kelas XII IPA 1</span>
+                    <span className="db-profile-name">{profile.nama || 'Ibu Sari'}</span>
+                    <span className="db-profile-role">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'}</span>
                 </div>
-                <div className="db-avatar">SR</div>
+                <div className="db-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
             </div>
         </header>
     );
@@ -101,7 +101,7 @@ function Topbar({ title = 'Pengaturan', subtitle = 'Kelola profil dan konfiguras
 
 export default function Pengaturan_Page() {
     const navigate = useNavigate();
-    const [profile, setProfile] = useState({ nama: 'Ibu Sari', email: '{profile.email}', mengampu_kelas: 'XII IPA 1', role: 'guru' });
+    const [profile, setProfile] = useState({ nama: 'Ibu Sari', email: 'sari.rahayu@sman1yk.sch.id', mengampu_kelas: 'XII IPA 1', role: 'guru' });
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editForm, setEditForm] = useState({});
 
@@ -144,7 +144,7 @@ export default function Pengaturan_Page() {
             <Sidebar active="pengaturan" onNavigate={handleNavigate} />
 
             <div className="db-main">
-                <Topbar />
+                <Topbar profile={profile} />
 
                 <main className="db-content set-content-wrapper">
                     <div className="set-grid-layout">
@@ -158,17 +158,17 @@ export default function Pengaturan_Page() {
                                 </div>
 
                                 <div className="set-profile-section">
-                                    <div className="set-avatar-circle">SR</div>
+                                    <div className="set-avatar-circle">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
                                     <div className="set-profile-meta">
                                         <h2 className="set-profile-name">{profile.nama}</h2>
-                                        <span className="set-profile-desc">Wali Kelas XII IPA 1 &middot; Guru Biologi</span>
+                                        <span className="set-profile-desc">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'} &middot; Guru Biologi</span>
                                     </div>
                                 </div>
 
                                 <div className="set-fields-list">
                                     <div className="set-field-row">
                                         <span className="set-field-label">Email</span>
-                                        <span className="set-field-val set-field-link">sari.rahayu@sman1yk.sch.id</span>
+                                        <span className="set-field-val set-field-link">{profile.email}</span>
                                     </div>
                                     <div className="set-field-row">
                                         <span className="set-field-label">Kelas diampu</span>

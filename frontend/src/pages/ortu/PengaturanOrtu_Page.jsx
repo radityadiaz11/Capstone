@@ -162,7 +162,7 @@ function PengaturanOrtu_Page() {
           {/* User Profile + Avatar */}
           <div className="po-profile-info">
             <div className="po-profile-text">
-              <span className="po-profile-name">Bapak Hidayat</span>
+              <span className="po-profile-name">{profile.nama || 'Bapak Hidayat'}</span>
               <span className="po-profile-role">Orang Tua Farhan</span>
             </div>
             <div className="po-avatar">
