@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './LoginPage.css';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -11,6 +11,16 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const role = localStorage.getItem('role');
+            if (role === 'guru') navigate('/dashboard');
+            else if (role === 'ortu') navigate('/ortu/dashboard');
+            else if (role === 'admin') navigate('/admin/dashboard');
+        }
+    }, [navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -19,11 +29,9 @@ export default function LoginPage() {
         try {
             const response = await api.post('/auth/login', { email, password });
 
-            // Simpan token
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('role', response.data.user.role);
 
-            // Arahkan berdasarkan role
             const role = response.data.user.role;
             if (role === 'guru') navigate('/dashboard');
             if (role === 'ortu') navigate('/ortu/dashboard');

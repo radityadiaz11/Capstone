@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardSekolah_Page.css';
 import api from '../../api/axios';
+import { useAuth } from '../../hooks/useAuth';
 
 function DashboardSekolah_Page() {
     const navigate = useNavigate();
+    const { logout } = useAuth(['admin']);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = () => {
-        navigate('/');
+        logout();
     };
 
     const [data, setData] = useState(null);

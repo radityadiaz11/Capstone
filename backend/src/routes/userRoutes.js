@@ -2,12 +2,10 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const { protect } = require('../middleware/authMiddleware');
-
-// Middleware protect sudah menjamin req.user terisi jika token valid
+const { protect, restrictTo } = require('../middleware/authMiddleware');
 
 // GET /api/v1/users (Untuk Admin, get semua user)
-router.get('/', protect, async (req, res) => {
+router.get('/', protect, restrictTo('admin'), async (req, res) => {
   try {
     const users = await User.findAll({ attributes: { exclude: ['password'] } });
     res.json({ success: true, data: users });
@@ -16,7 +14,7 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-// GET /api/v1/users/profile (Get profile diri sendiri)
+// GET /api/v1/users/profile (Get profile diri sendiri, semua role)
 router.get('/profile', protect, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, { attributes: { exclude: ['password'] } });
@@ -27,7 +25,7 @@ router.get('/profile', protect, async (req, res) => {
   }
 });
 
-// PUT /api/v1/users/profile (Update profile diri sendiri)
+// PUT /api/v1/users/profile (Update profile diri sendiri, semua role)
 router.put('/profile', protect, async (req, res) => {
   try {
     const { nama, email, password } = req.body;
@@ -39,7 +37,7 @@ router.put('/profile', protect, async (req, res) => {
     if (password) {
       user.password = await bcrypt.hash(password, 12);
     }
-    
+
     await user.save();
     res.json({ success: true, message: 'Profile updated successfully', data: { id: user.id, nama: user.nama, email: user.email, role: user.role } });
   } catch (error) {
@@ -48,11 +46,9 @@ router.put('/profile', protect, async (req, res) => {
 });
 
 // POST /api/v1/users (Admin create user)
-router.post('/', protect, async (req, res) => {
+router.post('/', protect, restrictTo('admin'), async (req, res) => {
   try {
     const { nama, email, password, role, mengampu_kelas } = req.body;
-    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Not authorized' });
-
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await User.create({ nama, email, password: hashedPassword, role, mengampu_kelas });
     res.status(201).json({ success: true, message: 'User created', data: { id: newUser.id, nama: newUser.nama, role: newUser.role, mengampu_kelas: newUser.mengampu_kelas } });
@@ -62,9 +58,8 @@ router.post('/', protect, async (req, res) => {
 });
 
 // PUT /api/v1/users/:id (Admin edit user)
-router.put('/:id', protect, async (req, res) => {
+router.put('/:id', protect, restrictTo('admin'), async (req, res) => {
   try {
-    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Not authorized' });
     const { nama, email, password, role, mengampu_kelas } = req.body;
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
@@ -84,9 +79,8 @@ router.put('/:id', protect, async (req, res) => {
 });
 
 // DELETE /api/v1/users/:id (Admin delete user)
-router.delete('/:id', protect, async (req, res) => {
+router.delete('/:id', protect, restrictTo('admin'), async (req, res) => {
   try {
-    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Not authorized' });
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     await user.destroy();

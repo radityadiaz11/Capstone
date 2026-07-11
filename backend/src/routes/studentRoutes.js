@@ -7,21 +7,21 @@ const {
   updateStudent,
   deleteStudent
 } = require('../controllers/studentController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, restrictTo } = require('../middleware/authMiddleware');
 
-// GET    /api/v1/students       → ambil semua siswa
-router.get('/',      protect, getAllStudents);
+// GET    /api/v1/students       → ambil semua siswa (hanya guru & admin)
+router.get('/',      protect, restrictTo('guru', 'admin'), getAllStudents);
 
-// GET    /api/v1/students/:id   → ambil 1 siswa
-router.get('/:id',   protect, getStudentById);
+// GET    /api/v1/students/:id   → ambil 1 siswa (hanya guru & admin)
+router.get('/:id',   protect, restrictTo('guru', 'admin'), getStudentById);
 
-// POST   /api/v1/students       → tambah siswa baru
-router.post('/',     protect, createStudent);
+// POST   /api/v1/students       → tambah siswa baru (hanya admin & guru)
+router.post('/',     protect, restrictTo('admin', 'guru'), createStudent);
 
-// PUT    /api/v1/students/:id   → update data siswa
-router.put('/:id',   protect, updateStudent);
+// PUT    /api/v1/students/:id   → update data siswa (hanya admin & guru)
+router.put('/:id',   protect, restrictTo('admin', 'guru'), updateStudent);
 
-// DELETE /api/v1/students/:id   → hapus siswa
-router.delete('/:id', protect, deleteStudent);
+// DELETE /api/v1/students/:id   → hapus siswa (hanya admin)
+router.delete('/:id', protect, restrictTo('admin'), deleteStudent);
 
 module.exports = router;

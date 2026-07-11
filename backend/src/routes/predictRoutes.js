@@ -1,18 +1,18 @@
 const express = require('express');
 const router  = express.Router();
 const { predictStudent, predictBatch, getAiModelStatus, getNarasi } = require('../controllers/predictController');
-const { protect }        = require('../middleware/authMiddleware');
+const { protect, restrictTo }        = require('../middleware/authMiddleware');
 
-// POST /api/v1/predict → prediksi performa siswa
-router.post('/', protect, predictStudent);
+// POST /api/v1/predict → prediksi performa siswa (guru & admin)
+router.post('/', protect, restrictTo('guru', 'admin'), predictStudent);
 
-// POST /api/v1/predict/batch → prediksi semua siswa
-router.post('/batch', protect, predictBatch);
+// POST /api/v1/predict/batch → prediksi semua siswa (guru & admin)
+router.post('/batch', protect, restrictTo('guru', 'admin'), predictBatch);
 
-// GET /api/v1/predict/model-status → cek status model AI
+// GET /api/v1/predict/model-status → cek status model AI (all authenticated)
 router.get('/model-status', protect, getAiModelStatus);
 
-// POST /api/v1/predict/narasi → ambil narasi AI
-router.post('/narasi', protect, getNarasi);
+// POST /api/v1/predict/narasi → ambil narasi AI (guru, admin, ortu)
+router.post('/narasi', protect, restrictTo('guru', 'admin', 'ortu'), getNarasi);
 
 module.exports = router;

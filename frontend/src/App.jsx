@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
 import DashboardSekolah_Page from './pages/admin/DashboardSekolah_Page';
 import RekapKelas_Page from './pages/admin/RekapKelas_Page';
 import EksporData_Admin_Page from './pages/admin/EksporData_Page';
@@ -32,33 +33,33 @@ function App() {
       <Route path="/" element={<LoginPage />} />
 
       {/* Guru Role */}
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/prediksi-siswa" element={<PrediksiSiswa_Page />} />
-      <Route path="/detail-siswa" element={<DetailSiswa_Page />} />
-      <Route path="/data-nilai" element={<DataNilai_Page />} />
-      <Route path="/monitoring-kelas" element={<MonitoringKelas_Page />} />
-      <Route path="/statistik-snbp" element={<StatistikSNBP_Page />} />
-      <Route path="/ekspor-data" element={<EksporData_Page />} />
-      <Route path="/notifikasi" element={<Notifikasi_Page />} />
-      <Route path="/pengaturan" element={<Pengaturan_Page />} />
-      <Route path="/tambah-siswa" element={<TambahSiswaGuru_Page />} />
+      <Route path="/dashboard" element={<ProtectedRoute requiredRoles={['guru']}><DashboardPage /></ProtectedRoute>} />
+      <Route path="/prediksi-siswa" element={<ProtectedRoute requiredRoles={['guru']}><PrediksiSiswa_Page /></ProtectedRoute>} />
+      <Route path="/detail-siswa" element={<ProtectedRoute requiredRoles={['guru']}><DetailSiswa_Page /></ProtectedRoute>} />
+      <Route path="/data-nilai" element={<ProtectedRoute requiredRoles={['guru']}><DataNilai_Page /></ProtectedRoute>} />
+      <Route path="/monitoring-kelas" element={<ProtectedRoute requiredRoles={['guru']}><MonitoringKelas_Page /></ProtectedRoute>} />
+      <Route path="/statistik-snbp" element={<ProtectedRoute requiredRoles={['guru']}><StatistikSNBP_Page /></ProtectedRoute>} />
+      <Route path="/ekspor-data" element={<ProtectedRoute requiredRoles={['guru']}><EksporData_Page /></ProtectedRoute>} />
+      <Route path="/notifikasi" element={<ProtectedRoute requiredRoles={['guru']}><Notifikasi_Page /></ProtectedRoute>} />
+      <Route path="/pengaturan" element={<ProtectedRoute requiredRoles={['guru']}><Pengaturan_Page /></ProtectedRoute>} />
+      <Route path="/tambah-siswa" element={<ProtectedRoute requiredRoles={['guru']}><TambahSiswaGuru_Page /></ProtectedRoute>} />
 
       {/* Ortu Role */}
-      <Route path="/ortu/dashboard" element={<DashboardOrtu_Page />} />
-      <Route path="/ortu/nilai" element={<NilaiRapor_Page />} />
-      <Route path="/ortu/prediksi-snbp" element={<PrediksiSnbp_Page />} />
-      <Route path="/ortu/notifikasi" element={<NotifikasiOrtu_Page />} />
-      <Route path="/ortu/pengaturan" element={<PengaturanOrtu_Page />} />
+      <Route path="/ortu/dashboard" element={<ProtectedRoute requiredRoles={['ortu']}><DashboardOrtu_Page /></ProtectedRoute>} />
+      <Route path="/ortu/nilai" element={<ProtectedRoute requiredRoles={['ortu']}><NilaiRapor_Page /></ProtectedRoute>} />
+      <Route path="/ortu/prediksi-snbp" element={<ProtectedRoute requiredRoles={['ortu']}><PrediksiSnbp_Page /></ProtectedRoute>} />
+      <Route path="/ortu/notifikasi" element={<ProtectedRoute requiredRoles={['ortu']}><NotifikasiOrtu_Page /></ProtectedRoute>} />
+      <Route path="/ortu/pengaturan" element={<ProtectedRoute requiredRoles={['ortu']}><PengaturanOrtu_Page /></ProtectedRoute>} />
 
       {/* Admin / Kepsek Role */}
-      <Route path="/admin/dashboard" element={<DashboardSekolah_Page />} />
-      <Route path="/admin/rekap-kelas" element={<RekapKelas_Page />} />
-      <Route path="/admin/ekspor" element={<EksporData_Admin_Page />} />
-      <Route path="/admin/notifikasi" element={<NotifikasiAdmin_Page />} />
-      <Route path="/admin/pengaturan" element={<PengaturanAdmin_Page />} />
-      <Route path="/admin/tambah-siswa" element={<TambahSiswaAdmin_Page />} />
-      <Route path="/admin/tambah-role" element={<TambahRoleAdmin_Page />} />
-      <Route path="/admin/statistik" element={<StatistikAdmin_Page />} />
+      <Route path="/admin/dashboard" element={<ProtectedRoute requiredRoles={['admin']}><DashboardSekolah_Page /></ProtectedRoute>} />
+      <Route path="/admin/rekap-kelas" element={<ProtectedRoute requiredRoles={['admin']}><RekapKelas_Page /></ProtectedRoute>} />
+      <Route path="/admin/ekspor" element={<ProtectedRoute requiredRoles={['admin']}><EksporData_Admin_Page /></ProtectedRoute>} />
+      <Route path="/admin/notifikasi" element={<ProtectedRoute requiredRoles={['admin']}><NotifikasiAdmin_Page /></ProtectedRoute>} />
+      <Route path="/admin/pengaturan" element={<ProtectedRoute requiredRoles={['admin']}><PengaturanAdmin_Page /></ProtectedRoute>} />
+      <Route path="/admin/tambah-siswa" element={<ProtectedRoute requiredRoles={['admin']}><TambahSiswaAdmin_Page /></ProtectedRoute>} />
+      <Route path="/admin/tambah-role" element={<ProtectedRoute requiredRoles={['admin']}><TambahRoleAdmin_Page /></ProtectedRoute>} />
+      <Route path="/admin/statistik" element={<ProtectedRoute requiredRoles={['admin']}><StatistikAdmin_Page /></ProtectedRoute>} />
     </Routes>
   );
 }
