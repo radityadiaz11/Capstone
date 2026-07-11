@@ -36,11 +36,11 @@ function PengaturanAdmin_Page() {
     };
 
     const infoSistem = [
-        { label: 'Model AI aktif',       value: 'Neural Network',         valueClass: 'pga-val-bold'  },
-        { label: 'Update terakhir',      value: '1 Mei 2026',             valueClass: 'pga-val-bold'  },
-        { label: 'Versi aplikasi',       value: 'v1.4.2',                 valueClass: 'pga-val-bold'  },
-        { label: 'Total pengguna aktif', value: '41',                     valueClass: 'pga-val-bold'  },
-        { label: 'Sekolah',              value: 'SMA Negeri 1 Yogyakarta',valueClass: 'pga-val-bold'  },
+        { label: 'Model AI aktif', value: 'Neural Network', valueClass: 'pga-val-bold' },
+        { label: 'Update terakhir', value: '1 Mei 2026', valueClass: 'pga-val-bold' },
+        { label: 'Versi aplikasi', value: 'v1.4.2', valueClass: 'pga-val-bold' },
+        { label: 'Total pengguna aktif', value: '41', valueClass: 'pga-val-bold' },
+        { label: 'Sekolah', value: 'SMA Negeri 1 Yogyakarta', valueClass: 'pga-val-bold' },
     ];
 
     return (
@@ -115,15 +115,15 @@ function PengaturanAdmin_Page() {
 
                 <div className="dbs-sidebar-bottom">
 
-                        <button className="dbs-nav-item" onClick={() => { navigate('/admin/notifikasi'); setIsMobileMenuOpen(false); }}>
-                            <span className="dbs-nav-icon">🔔</span>
-                            <span>Notifikasi</span>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/admin/notifikasi'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">🔔</span>
+                        <span>Notifikasi</span>
                         <span className="dbs-notif-badge">1</span>
-                        </button>
-                        <button className="dbs-nav-item active" onClick={() => setIsMobileMenuOpen(false)}>
-                            <span className="dbs-nav-icon">⚙</span>
-                            <span>Pengaturan</span>
-                        </button>
+                    </button>
+                    <button className="dbs-nav-item active" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">⚙</span>
+                        <span>Pengaturan</span>
+                    </button>
 
                     <button onClick={handleLogout} className="dbs-nav-item dbs-nav-logout">
                         <span className="dbs-nav-icon">⏻</span>
@@ -190,7 +190,7 @@ function PengaturanAdmin_Page() {
                             {/* Edit Button */}
                             <button
                                 className="pga-edit-btn"
-                                onClick={() => { if(!isEditing) { setEditForm({ ...profile, password: '' }); setIsEditing(true); } else setIsEditing(false); }}
+                                onClick={() => { if (!isEditing) { setEditForm({ ...profile, password: '' }); setIsEditing(true); } else setIsEditing(false); }}
                             >
                                 {isEditing ? 'Simpan profil' : 'Edit profil'}
                             </button>

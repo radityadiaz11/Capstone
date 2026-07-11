@@ -13,24 +13,24 @@ function PengaturanOrtu_Page() {
   const [editForm, setEditForm] = useState({});
 
   React.useEffect(() => {
-      const fetchProfile = async () => {
-          try {
-              const res = await api.get('/users/profile');
-              if (res.data.success) setProfile(res.data.data);
-          } catch (err) { console.error('Gagal memuat profil', err); }
-      };
-      fetchProfile();
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/users/profile');
+        if (res.data.success) setProfile(res.data.data);
+      } catch (err) { console.error('Gagal memuat profil', err); }
+    };
+    fetchProfile();
   }, []);
 
   const handleSaveProfile = async () => {
-      try {
-          await api.put('/users/profile', editForm);
-          setProfile(editForm);
-          setIsEditOpen(false);
-          alert('Profil berhasil diperbarui');
-      } catch (err) {
-          alert('Gagal memperbarui profil');
-      }
+    try {
+      await api.put('/users/profile', editForm);
+      setProfile(editForm);
+      setIsEditOpen(false);
+      alert('Profil berhasil diperbarui');
+    } catch (err) {
+      alert('Gagal memperbarui profil');
+    }
   };
 
   const [prefs, setPrefs] = useState({
@@ -40,7 +40,8 @@ function PengaturanOrtu_Page() {
     laporanMingguan: false,
   });
 
-  const handleLogout = () => { localStorage.removeItem('token'); localStorage.removeItem('role');
+  const handleLogout = () => {
+    localStorage.removeItem('token'); localStorage.removeItem('role');
     navigate('/');
   };
 
@@ -132,7 +133,7 @@ function PengaturanOrtu_Page() {
           </button>
 
           <button
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => { navigate('/ortu/pengaturan'); setIsMobileMenuOpen(false); }}
             className="po-nav-item active"
           >
             <span className="po-nav-icon">⚙</span>
@@ -214,7 +215,7 @@ function PengaturanOrtu_Page() {
               <div className="po-prefs-list">
                 <div className="po-pref-row">
                   <span className="po-pref-label">Notif nilai turun</span>
-                  <button 
+                  <button
                     onClick={() => togglePref('nilaiTurun')}
                     className={`po-toggle-badge ${prefs.nilaiTurun ? 'active' : 'inactive'}`}
                   >
@@ -224,7 +225,7 @@ function PengaturanOrtu_Page() {
 
                 <div className="po-pref-row">
                   <span className="po-pref-label">Notif kehadiran rendah</span>
-                  <button 
+                  <button
                     onClick={() => togglePref('kehadiranRendah')}
                     className={`po-toggle-badge ${prefs.kehadiranRendah ? 'active' : 'inactive'}`}
                   >
@@ -234,7 +235,7 @@ function PengaturanOrtu_Page() {
 
                 <div className="po-pref-row">
                   <span className="po-pref-label">Laporan mingguan</span>
-                  <button 
+                  <button
                     onClick={() => togglePref('laporanMingguan')}
                     className={`po-toggle-badge ${prefs.laporanMingguan ? 'active' : 'inactive'}`}
                   >
