@@ -52,7 +52,7 @@ function Sidebar({ active, onNavigate }) {
   );
 }
 
-function Topbar({ title = 'Monitoring Kelas', subtitle = 'Tahun Ajaran 2025/2026' }) {
+function Topbar({ title = 'Monitoring Kelas', subtitle = 'Tahun Ajaran 2025/2026', profile = {} }) {
   return (
     <header className="db-topbar">
       <div className="db-topbar-left" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -60,11 +60,11 @@ function Topbar({ title = 'Monitoring Kelas', subtitle = 'Tahun Ajaran 2025/2026
         <span className="db-page-sub">{subtitle}</span>
       </div>
       <div className="db-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div className="db-profile-info" style={{ textAlign: 'right' }}>
-          <span className="db-profile-name" style={{ display: 'block', fontWeight: 600, fontSize: '13.5px' }}>Ibu Sari</span>
-          <span className="db-profile-role" style={{ display: 'block', fontSize: '11.5px', color: '#64748b' }}>Wali Kelas XII IPA 1</span>
-        </div>
-        <div className="db-avatar">SR</div>
+        <div className="db-profile-info">
+                    <span className="db-profile-name">{profile.nama || 'Ibu Sari'}</span>
+                    <span className="db-profile-role">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'}</span>
+                </div>
+                <div className="db-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
       </div>
     </header>
   );
@@ -74,6 +74,17 @@ const MonitoringKelas_Page = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [profile, setProfile] = useState({});
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/users/profile');
+        if (res.data.success) setProfile(res.data.data);
+      } catch (err) {}
+    };
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     const fetchMonitoring = async () => {
@@ -93,16 +104,16 @@ const MonitoringKelas_Page = () => {
   }, []);
 
   const handleNavigate = (id) => {
-    if (id === 'dashboard') navigate('/dashboard');
-    if (id === 'prediksi') navigate('/prediksi-siswa');
-    if (id === 'nilai') navigate('/data-nilai');
-    if (id === 'monitoring') navigate('/monitoring-kelas');
-    if (id === 'tambah-siswa') navigate('/tambah-siswa');
-    if (id === 'statistik') navigate('/statistik-snbp');
-    if (id === 'ekspor') navigate('/ekspor-data');
-    if (id === 'notifikasi-settings') navigate('/notifikasi');
-    if (id === 'pengaturan') navigate('/pengaturan');
-    if (id === 'keluar') { localStorage.removeItem('token'); localStorage.removeItem('role'); navigate('/'); }
+    if (id === 'dashboard') navigate('/guru/dashboard');
+    if (id === 'prediksi') navigate('/guru/prediksi-siswa');
+    if (id === 'nilai') navigate('/guru/data-nilai');
+    if (id === 'monitoring') navigate('/guru/monitoring-kelas');
+    if (id === 'tambah-siswa') navigate('/guru/tambah-siswa');
+    if (id === 'statistik') navigate('/guru/statistik-snbp');
+    if (id === 'ekspor') navigate('/guru/ekspor-data');
+    if (id === 'notifikasi-settings') navigate('/guru/notifikasi');
+    if (id === 'pengaturan') navigate('/guru/pengaturan');
+    if (id === 'keluar') { localStorage.removeItem('token'); localStorage.removeItem('role'); navigate('/', { replace: true }); }
   };
 
   const overallAtt = data?.overallAttendance || '—';
@@ -128,9 +139,9 @@ const MonitoringKelas_Page = () => {
     <div className="db-shell">
       <Sidebar active="monitoring" onNavigate={handleNavigate} />
       <div className="db-main">
-        <Topbar title="Monitoring Kelas" subtitle="Tahun Ajaran 2025/2026" />
+        <Topbar profile={profile} title="Monitoring Kelas" subtitle="Tahun Ajaran 2025/2026" />
         <main className="db-content monitoring-content-wrapper">
-          
+
           {/* Top 3 Stat Cards */}
           <section className="summary-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
             {loading ? (
@@ -154,7 +165,7 @@ const MonitoringKelas_Page = () => {
 
           {/* Middle Layout */}
           <div className="db-mid-row monitoring-grid-row">
-            
+
             {/* Left Card: Rekap kehadiran per minggu */}
             <div className="db-card attendance-weekly-card">
               <div className="db-card-header">

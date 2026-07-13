@@ -1,13 +1,35 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './NotifikasiOrtu_Page.css';
+import api from '../../api/axios';
 
 function NotifikasiOrtu_Page() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  
+  const [student, setStudent] = useState(null);
+  const [profile, setProfile] = useState({});
+  const s = student || {};
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const resStud = await api.get('/students');
+        if (resStud.data.success && resStud.data.data.length > 0) setStudent(resStud.data.data[0]);
+        const resProf = await api.get('/users/profile');
+        if (resProf.data.success) setProfile(resProf.data.data);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const handleLogout = () => {
-    navigate('/');
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    navigate('/', { replace: true });
   };
 
   // Mock data for parent notifications matching the user's screenshot
@@ -15,7 +37,7 @@ function NotifikasiOrtu_Page() {
     {
       id: 1,
       type: 'remedial',
-      message: 'Nilai Farhan turun dari 65.3 menjadi 58.1. Perlu perhatian segera.',
+      message: `Nilai ${s.nama || 'Siswa'} turun dari 65.3 menjadi 58.1. Perlu perhatian segera.`,
       time: 'Hari ini, 09.00',
       icon: '⚠️',
       bold: true,
@@ -23,7 +45,7 @@ function NotifikasiOrtu_Page() {
     {
       id: 3,
       type: 'presence',
-      message: 'Kehadiran Farhan bulan ini: 72% — di bawah standar 85%.',
+      message: `Kehadiran ${s.nama || 'Siswa'} bulan ini: 72% — di bawah standar 85%.`,
       time: '3 hari lalu',
       icon: '🔴',
       bold: false,
@@ -31,7 +53,7 @@ function NotifikasiOrtu_Page() {
     {
       id: 5,
       type: 'success',
-      message: 'Nilai Fisika Farhan naik dari 55 → 65 di ujian tengah semester.',
+      message: `Nilai Fisika ${s.nama || 'Siswa'} naik dari 55 → 65 di ujian tengah semester.`,
       time: '1 bulan lalu',
       icon: '✅',
       bold: false,
@@ -143,18 +165,16 @@ function NotifikasiOrtu_Page() {
         <header className="no-topbar">
           <div className="no-page-info">
             <h2 className="no-page-title">Notifikasi</h2>
-            <p className="no-page-sub">Pemberitahuan terkait perkembangan Farhan</p>
+            <p className="no-page-sub">Pemberitahuan terkait perkembangan {s.nama || 'Siswa'}</p>
           </div>
 
           {/* User Profile + Avatar */}
           <div className="no-profile-info">
             <div className="no-profile-text">
-              <span className="no-profile-name">Bapak Hidayat</span>
-              <span className="no-profile-role">Orang Tua Farhan</span>
+              <span className="no-profile-name">{profile.nama || 'ORANG TUA'}</span>
+              <span className="no-profile-role">{profile.role === 'ortu' ? 'Orang Tua' : (profile.role || 'Orang Tua')}</span>
             </div>
-            <div className="no-avatar">
-              HN
-            </div>
+            <div className="no-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'OT'}</div>
           </div>
         </header>
 

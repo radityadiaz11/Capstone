@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import './NotifikasiAdmin_Page.css';
 
@@ -23,10 +24,27 @@ const notifikasiData = [
 
 function NotifikasiAdmin_Page() {
     const navigate = useNavigate();
+    const [user, setUser] = useState({ nama: 'ADMIN', role: 'Kepala Sekolah' });
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) {
+                    setUser({ nama: res.data.data.nama, role: res.data.data.role === 'admin' ? 'Administrator' : 'Kepala Sekolah' });
+                }
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = () => {
-        navigate('/');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/', {
+            replace: true
+        });
     };
 
     return (
@@ -101,15 +119,15 @@ function NotifikasiAdmin_Page() {
 
                 <div className="dbs-sidebar-bottom">
 
-                        <button className="dbs-nav-item active" onClick={() => setIsMobileMenuOpen(false)}>
-                            <span className="dbs-nav-icon">🔔</span>
-                            <span>Notifikasi</span>
+                    <button className="dbs-nav-item active" onClick={() => setIsMobileMenuOpen(false)}>
+                        <span className="dbs-nav-icon">🔔</span>
+                        <span>Notifikasi</span>
                         <span className="dbs-notif-badge">1</span>
-                        </button>
-                        <button className="dbs-nav-item" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
-                            <span className="dbs-nav-icon">⚙</span>
-                            <span>Pengaturan</span>
-                        </button>
+                    </button>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">⚙</span>
+                        <span>Pengaturan</span>
+                    </button>
 
                     <button onClick={handleLogout} className="dbs-nav-item dbs-nav-logout">
                         <span className="dbs-nav-icon">⏻</span>
@@ -129,10 +147,10 @@ function NotifikasiAdmin_Page() {
                     </div>
                     <div className="dbs-profile-info">
                         <div className="dbs-profile-text">
-                            <span className="dbs-profile-name">Bapak Hartono</span>
-                            <span className="dbs-profile-role">Kepala Sekolah</span>
+                            <span className="dbs-profile-name">{user.nama || 'ADMIN'}</span>
+                            <span className="dbs-profile-role">{user.role || (user.role === 'admin' ? 'Administrator' : 'Kepala Sekolah')}</span>
                         </div>
-                        <div className="dbs-avatar">HT</div>
+                        <div className="dbs-avatar">{user.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                     </div>
                 </header>
 

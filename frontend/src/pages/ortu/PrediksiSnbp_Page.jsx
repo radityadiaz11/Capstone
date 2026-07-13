@@ -10,6 +10,7 @@ function PrediksiSnbp_Page() {
     const handleLogout = () => navigate('/');
 
     const [student, setStudent] = useState(null);
+    const [profile, setProfile] = useState({});
     const [prediction, setPrediction] = useState(null);
     const [narasi, setNarasi] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -18,6 +19,9 @@ function PrediksiSnbp_Page() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const resProfile = await api.get('/users/profile');
+                if (resProfile.data.success) setProfile(resProfile.data.data);
+
                 const res = await api.get('/students');
                 if (res.data.success && res.data.data.length > 0) {
                     setStudent(res.data.data[0]);
@@ -41,19 +45,23 @@ function PrediksiSnbp_Page() {
     }, []);
 
     const s = student || {};
-    const examScore = s.exam_score || 0;
-    const avgAttendance = s.attendance_w1 != null
-        ? (((s.attendance_w1 || 0) + (s.attendance_w2 || 0) + (s.attendance_w3 || 0) + (s.attendance_w4 || 0)) / 4).toFixed(0)
-        : '—';
-
-    // Data perkembangan studi siswa from API
-    const subjects = [
+    const subjectsRaw = [
         { name: 'Matematika', score: s.math_score || 0, color: (s.math_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
         { name: 'Bahasa Indonesia', score: s.indo_score || 0, color: (s.indo_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
         { name: 'Biologi', score: s.bio_score || 0, color: (s.bio_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
         { name: 'Kimia', score: s.chem_score || 0, color: (s.chem_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
         { name: 'Fisika', score: s.phy_score || 0, color: (s.phy_score || 0) < 75 ? '#ff9f1c' : '#16a34a' },
-    ].filter(sub => sub.score > 0);
+    ];
+    const subjects = subjectsRaw.filter(sub => sub.score > 0);
+
+    const avgRapor = subjects.length > 0 
+        ? subjects.reduce((acc, curr) => acc + curr.score, 0) / subjects.length 
+        : 0;
+
+    const examScore = s.exam_score ? s.exam_score : avgRapor;
+    const avgAttendance = s.attendance_w1 != null
+        ? (((s.attendance_w1 || 0) + (s.attendance_w2 || 0) + (s.attendance_w3 || 0) + (s.attendance_w4 || 0)) / 4).toFixed(0)
+        : (subjects.length > 0 ? 100 : '—');
 
     // Rekomendasi from AI narasi or fallback
     const actions = narasi ? [
@@ -172,10 +180,10 @@ function PrediksiSnbp_Page() {
                     </div>
                     <div className="ps-profile-info">
                         <div className="ps-profile-text">
-                            <span className="ps-profile-name">Bapak Hidayat</span>
-                            <span className="ps-profile-role">Orang Tua Farhan</span>
+                            <span className="ps-profile-name">{profile.nama || 'ORANG TUA'}</span>
+                            <span className="ps-profile-role">{profile.role === 'ortu' ? 'Orang Tua' : (profile.role || 'Orang Tua')}</span>
                         </div>
-                        <div className="ps-avatar">HN</div>
+                        <div className="ps-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'OT'}</div>
                     </div>
                 </header>
 

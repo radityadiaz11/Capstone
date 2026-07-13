@@ -1,6 +1,8 @@
 /* ─── Page wrapper ─────────────────────────────────────────────── */
 .login-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
   background-color: #ece9e4;
   display: flex;
   flex-direction: column;

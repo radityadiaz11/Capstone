@@ -22,7 +22,9 @@ export function useAuth(requiredRoles = []) {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
-    navigate('/');
+    navigate('/', {
+      replace: true
+    });
   };
 
   return {

@@ -12,7 +12,7 @@ const navMenu = [
             { id: 'prediksi', label: 'Prediksi Siswa', icon: '◎' },
             { id: 'nilai', label: 'Data Nilai', icon: '≡' },
             { id: 'monitoring', label: 'Monitoring Kelas', icon: '◫' },
-      { id: 'tambah-siswa', label: 'Tambah Data Siswa', icon: '✚' },
+            { id: 'tambah-siswa', label: 'Tambah Data Siswa', icon: '✚' },
         ],
     },
     {
@@ -127,16 +127,20 @@ export default function Pengaturan_Page() {
     };
 
     const handleNavigate = (id) => {
-        if (id === 'dashboard') navigate('/dashboard');
-        if (id === 'prediksi') navigate('/prediksi-siswa');
-        if (id === 'nilai') navigate('/data-nilai');
-        if (id === 'monitoring') navigate('/monitoring-kelas');
-    if (id === 'tambah-siswa') navigate('/tambah-siswa');
-        if (id === 'statistik') navigate('/statistik-snbp');
-        if (id === 'ekspor') navigate('/ekspor-data');
-        if (id === 'notifikasi-settings') navigate('/notifikasi');
-        if (id === 'pengaturan') navigate('/pengaturan');
-        if (id === 'keluar') navigate('/');
+        if (id === 'dashboard') navigate('/guru/dashboard');
+        if (id === 'prediksi') navigate('/guru/prediksi-siswa');
+        if (id === 'nilai') navigate('/guru/data-nilai');
+        if (id === 'monitoring') navigate('/guru/monitoring-kelas');
+        if (id === 'tambah-siswa') navigate('/guru/tambah-siswa');
+        if (id === 'statistik') navigate('/guru/statistik-snbp');
+        if (id === 'ekspor') navigate('/guru/ekspor-data');
+        if (id === 'notifikasi-settings') navigate('/guru/notifikasi');
+        if (id === 'pengaturan') navigate('/guru/pengaturan');
+        if (id === 'keluar') {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            navigate('/', { replace: true });
+        }
     };
 
     return (
@@ -270,6 +274,34 @@ export default function Pengaturan_Page() {
                     </div>
                 </main>
             </div>
+
+            {/* Modal Edit Profil */}
+            {isEditOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: '90%', maxWidth: '400px' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Edit Profil</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Nama</label>
+                                <input type="text" value={editForm.nama || ''} onChange={e => setEditForm({ ...editForm, nama: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Email</label>
+                                <input type="email" value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Password Baru (Opsional)</label>
+                                <input type="password" value={editForm.password || ''} onChange={e => setEditForm({ ...editForm, password: e.target.value })} placeholder="Kosongkan jika tidak ingin diubah" style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                            <button onClick={() => setIsEditOpen(false)} style={{ background: '#f1f5f9', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Batal</button>
+                            <button onClick={handleSaveProfile} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Simpan</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

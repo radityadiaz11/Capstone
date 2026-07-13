@@ -5,10 +5,27 @@ import api from '../../api/axios';
 
 function TambahSiswaAdmin_Page() {
     const navigate = useNavigate();
+    const [user, setUser] = useState({ nama: 'ADMIN', role: 'Kepala Sekolah' });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) {
+                    setUser({ nama: res.data.data.nama, role: res.data.data.role === 'admin' ? 'Administrator' : 'Kepala Sekolah' });
+                }
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
+
     const handleLogout = () => {
-        navigate('/');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/', {
+            replace: true
+        });
     };
 
     const [loading, setLoading] = useState(true);
@@ -47,9 +64,20 @@ function TambahSiswaAdmin_Page() {
     const handleSaveStudent = async () => {
         try {
             const payload = { ...formData };
+            let totalScore = 0;
+            let validSubjects = 0;
+
             ['math_score', 'indo_score', 'eng_score', 'bio_score', 'chem_score', 'phy_score'].forEach(key => {
-                if (payload[key] === '') payload[key] = null;
+                const val = payload[key];
+                if (val === '' || val === null || val === undefined) {
+                    payload[key] = null;
+                } else {
+                    totalScore += parseFloat(val);
+                    validSubjects++;
+                }
             });
+
+            payload.exam_score = validSubjects > 0 ? (totalScore / validSubjects) : 0;
 
             if (isEditMode) {
                 await api.put(`/students/${payload.student_id}`, payload);
@@ -67,7 +95,7 @@ function TambahSiswaAdmin_Page() {
         <div className="dbs-container">
 
             {/* ── MOBILE HEADER ── */}
-                        <div className="dbs-mobile-header">
+            <div className="dbs-mobile-header">
                 <div className="dbs-mobile-brand">
                     <span className="dbs-mobile-brand-title">SNBP Monitor</span>
                     <span className="dbs-mobile-brand-sub">Sistem Cerdas Kesiapan Siswa</span>
@@ -132,15 +160,15 @@ function TambahSiswaAdmin_Page() {
                 </div>
 
                 <div className="dbs-sidebar-bottom">
-                        <button className="dbs-nav-item" onClick={() => { navigate('/admin/notifikasi'); setIsMobileMenuOpen(false); }}>
-                            <span className="dbs-nav-icon">🔔</span>
-                            <span>Notifikasi</span>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/admin/notifikasi'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">🔔</span>
+                        <span>Notifikasi</span>
                         <span className="dbs-notif-badge">1</span>
-                        </button>
-                        <button className="dbs-nav-item" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
-                            <span className="dbs-nav-icon">⚙</span>
-                            <span>Pengaturan</span>
-                        </button>
+                    </button>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">⚙</span>
+                        <span>Pengaturan</span>
+                    </button>
 
                     <button onClick={handleLogout} className="dbs-nav-item dbs-nav-logout">
                         <span className="dbs-nav-icon">⏻</span>
@@ -158,10 +186,10 @@ function TambahSiswaAdmin_Page() {
                     </div>
                     <div className="dbs-profile-info">
                         <div className="dbs-profile-text">
-                            <span className="dbs-profile-name">Bapak Hartono</span>
-                            <span className="dbs-profile-role">Kepala Sekolah</span>
+                            <span className="dbs-profile-name">{user.nama || 'ADMIN'}</span>
+                            <span className="dbs-profile-role">{user.role || (user.role === 'admin' ? 'Administrator' : 'Kepala Sekolah')}</span>
                         </div>
-                        <div className="dbs-avatar">HT</div>
+                        <div className="dbs-avatar">{user.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                     </div>
                 </header>
 
@@ -170,7 +198,7 @@ function TambahSiswaAdmin_Page() {
                     <section className="rkp-card" style={{ marginTop: '20px', width: '100%' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                             <h3 className="rkp-chart-title" style={{ margin: 0 }}>Manajemen Data Siswa & Nilai</h3>
-                            <button 
+                            <button
                                 onClick={() => handleOpenModal()}
                                 style={{ background: '#185FA5', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
                             >
@@ -194,9 +222,9 @@ function TambahSiswaAdmin_Page() {
                                 </thead>
                                 <tbody>
                                     {loading ? (
-                                        <tr><td colSpan="9" style={{textAlign: 'center', padding: '20px'}}>Memuat data...</td></tr>
+                                        <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>Memuat data...</td></tr>
                                     ) : students.length === 0 ? (
-                                        <tr><td colSpan="9" style={{textAlign: 'center', padding: '20px'}}>Tidak ada data siswa.</td></tr>
+                                        <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>Tidak ada data siswa.</td></tr>
                                     ) : (
                                         students.map(s => (
                                             <tr key={s.id}>
@@ -209,7 +237,7 @@ function TambahSiswaAdmin_Page() {
                                                 <td style={{ textAlign: 'center' }}>{s.chem_score || '-'}</td>
                                                 <td style={{ textAlign: 'center' }}>{s.phy_score || '-'}</td>
                                                 <td style={{ textAlign: 'center' }}>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleOpenModal(s)}
                                                         style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, color: '#334155' }}
                                                     >
@@ -234,39 +262,39 @@ function TambahSiswaAdmin_Page() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', gridColumn: 'span 2' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Nama Siswa</label>
-                                <input type="text" value={formData.nama || ''} onChange={e => setFormData({...formData, nama: e.target.value})} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="text" value={formData.nama || ''} onChange={e => setFormData({ ...formData, nama: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>NISN</label>
-                                <input type="text" value={formData.student_id || ''} onChange={e => setFormData({...formData, student_id: e.target.value})} disabled={isEditMode} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="text" value={formData.student_id || ''} onChange={e => setFormData({ ...formData, student_id: e.target.value })} disabled={isEditMode} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Program Studi Tujuan</label>
-                                <input type="text" value={formData.prodi || ''} onChange={e => setFormData({...formData, prodi: e.target.value})} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="text" value={formData.prodi || ''} onChange={e => setFormData({ ...formData, prodi: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Matematika</label>
-                                <input type="number" value={formData.math_score || ''} onChange={e => setFormData({...formData, math_score: e.target.value})} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="number" value={formData.math_score || ''} onChange={e => setFormData({ ...formData, math_score: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Bahasa Indonesia</label>
-                                <input type="number" value={formData.indo_score || ''} onChange={e => setFormData({...formData, indo_score: e.target.value})} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="number" value={formData.indo_score || ''} onChange={e => setFormData({ ...formData, indo_score: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Bahasa Inggris</label>
-                                <input type="number" value={formData.eng_score || ''} onChange={e => setFormData({...formData, eng_score: e.target.value})} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="number" value={formData.eng_score || ''} onChange={e => setFormData({ ...formData, eng_score: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Biologi</label>
-                                <input type="number" value={formData.bio_score || ''} onChange={e => setFormData({...formData, bio_score: e.target.value})} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="number" value={formData.bio_score || ''} onChange={e => setFormData({ ...formData, bio_score: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Kimia</label>
-                                <input type="number" value={formData.chem_score || ''} onChange={e => setFormData({...formData, chem_score: e.target.value})} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="number" value={formData.chem_score || ''} onChange={e => setFormData({ ...formData, chem_score: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Fisika</label>
-                                <input type="number" value={formData.phy_score || ''} onChange={e => setFormData({...formData, phy_score: e.target.value})} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                <input type="number" value={formData.phy_score || ''} onChange={e => setFormData({ ...formData, phy_score: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>

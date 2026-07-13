@@ -24,10 +24,14 @@ const sequelize = process.env.DATABASE_URL
       }
     );
 
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected) return;
   try {
     await sequelize.authenticate();
     setUseDatabase(true);
+    isConnected = true;
     console.log('✅ Mode: Database PostgreSQL aktif');
   } catch (error) {
     setUseDatabase(false);

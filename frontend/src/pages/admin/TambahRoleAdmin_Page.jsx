@@ -73,8 +73,14 @@ function TambahRoleAdmin_Page() {
     };
 
     const handleLogout = () => {
-        navigate('/');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/', {
+            replace: true
+        });
     };
+
+    const user = profile;
 
     return (
         <div className="dbs-container">
@@ -173,10 +179,10 @@ function TambahRoleAdmin_Page() {
                     </div>
                     <div className="dbs-profile-info">
                         <div className="dbs-profile-text">
-                            <span className="dbs-profile-name">{profile.nama || 'Bapak Hartono'}</span>
-                            <span className="dbs-profile-role">{profile.role === 'admin' ? 'Kepala Sekolah' : (profile.role === 'guru' ? 'Wali Kelas' : 'Orang Tua')}</span>
+                            <span className="dbs-profile-name">{user.nama || 'ADMIN'}</span>
+                            <span className="dbs-profile-role">{user.role || (user.role === 'admin' ? 'Administrator' : 'Kepala Sekolah')}</span>
                         </div>
-                        <div className="dbs-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'HT'}</div>
+                        <div className="dbs-avatar">{user.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                     </div>
                 </header>
 

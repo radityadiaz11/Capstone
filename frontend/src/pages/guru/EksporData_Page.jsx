@@ -1,26 +1,96 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './DashboardPage.css';
 import './EksporData_Page.css';
 import api from '../../api/axios';
 
+const navMenu = [
+  {
+    group: 'MENU UTAMA',
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
+      { id: 'prediksi', label: 'Prediksi Siswa', icon: '◎' },
+      { id: 'nilai', label: 'Data Nilai', icon: '≡' },
+      { id: 'monitoring', label: 'Monitoring Kelas', icon: '◫' },
+      { id: 'tambah-siswa', label: 'Tambah Data Siswa', icon: '✚' },
+    ],
+  },
+  {
+    group: 'LAPORAN',
+    items: [
+      { id: 'statistik', label: 'Statistik SNBP', icon: '⊟' },
+      { id: 'ekspor', label: 'Ekspor Data', icon: '↓' },
+    ],
+  },
+];
+
+function Sidebar({ active, onNavigate }) {
+  return (
+    <aside className="db-sidebar">
+      <div className="db-sidebar-brand">
+        <span className="db-brand-title">SNBP Monitor</span>
+        <span className="db-brand-sub">Sistem Cerdas Kesiapan Siswa</span>
+      </div>
+      <nav className="db-nav">
+        {navMenu.map((section) => (
+          <div key={section.group} className="db-nav-group">
+            <span className="db-nav-group-label">{section.group}</span>
+            {section.items.map((item) => (
+              <button key={item.id} className={`db-nav-item${active === item.id ? ' active' : ''}`} onClick={() => onNavigate(item.id)} type="button">
+                <span className="db-nav-icon">{item.icon}</span>{item.label}
+              </button>
+            ))}
+          </div>
+        ))}
+      </nav>
+      <div className="db-sidebar-bottom">
+        <button className={`db-nav-item${active === 'notifikasi-settings' ? ' active' : ''}`} onClick={() => onNavigate('notifikasi-settings')} type="button"><span className="db-nav-icon">🔔</span>Notifikasi</button>
+        <button className={`db-nav-item${active === 'pengaturan' ? ' active' : ''}`} onClick={() => onNavigate('pengaturan')} type="button"><span className="db-nav-icon">⚙</span>Pengaturan</button>
+        <button className="db-nav-item db-nav-logout" onClick={() => onNavigate('keluar')} type="button"><span className="db-nav-icon">⏻</span>Keluar</button>
+      </div>
+    </aside>
+  );
+}
+
+function Topbar({ title = 'Ekspor Data', subtitle = 'Pilih data yang ingin diekspor', profile = {} }) {
+  return (
+    <header className="db-topbar">
+      <div className="db-topbar-left" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <h1 className="db-page-title" style={{ margin: 0 }}>{title}</h1>
+        <span className="db-page-sub">{subtitle}</span>
+      </div>
+      <div className="db-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="db-profile-info">
+                    <span className="db-profile-name">{profile.nama || 'Ibu Sari'}</span>
+                    <span className="db-profile-role">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'}</span>
+                </div>
+                <div className="db-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
+      </div>
+    </header>
+  );
+}
+
 function EksporData_Page() {
     const navigate = useNavigate();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loadingItem, setLoadingItem] = useState(null);
-
-    const handleLogout = () => {
-        navigate('/');
-    };
-
+    const [profile, setProfile] = useState({ nama: 'Ibu Sari', mengampu_kelas: 'XII IPA 1' });
     const [statsData, setStatsData] = useState([]);
     const [riwayatEkspor, setRiwayatEkspor] = useState([
-        { label: 'Laporan Kesiapan April 2026', type: 'PDF', typeClass: 'ekd-badge-pdf' },
-        { label: 'Data Nilai Sem. 5 Semua Kelas', type: 'Excel', typeClass: 'ekd-badge-excel' },
-        { label: 'Laporan Kesiapan Maret 2026', type: 'PDF', typeClass: 'ekd-badge-pdf' },
+        { label: 'Laporan Kesiapan April 2026', type: 'PDF', typeClass: 'fmt-pdf' },
+        { label: 'Data Nilai Sem. 5 Semua Kelas', type: 'Excel', typeClass: 'fmt-excel' },
+        { label: 'Laporan Kesiapan Maret 2026', type: 'PDF', typeClass: 'fmt-pdf' },
     ]);
-    
+
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchStatsAndProfile = async () => {
+            try {
+                const resProfile = await api.get('/users/profile');
+                if (resProfile.data.success) {
+                    setProfile(resProfile.data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+            }
             try {
                 const res = await api.get('/dashboard/snbp-stats');
                 if (res.data.success && res.data.data.kelasPerforma) {
@@ -30,8 +100,21 @@ function EksporData_Page() {
                 console.error('Error fetching stats for report:', error);
             }
         };
-        fetchStats();
+        fetchStatsAndProfile();
     }, []);
+
+    const handleNavigate = (id) => {
+        if (id === 'dashboard') navigate('/guru/dashboard');
+        if (id === 'prediksi') navigate('/guru/prediksi-siswa');
+        if (id === 'nilai') navigate('/guru/data-nilai');
+        if (id === 'monitoring') navigate('/guru/monitoring-kelas');
+        if (id === 'tambah-siswa') navigate('/guru/tambah-siswa');
+        if (id === 'statistik') navigate('/guru/statistik-snbp');
+        if (id === 'ekspor') navigate('/guru/ekspor-data');
+        if (id === 'notifikasi-settings') navigate('/guru/notifikasi');
+        if (id === 'pengaturan') navigate('/guru/pengaturan');
+        if (id === 'keluar') { localStorage.removeItem('token'); localStorage.removeItem('role'); navigate('/', { replace: true }); }
+    };
 
     const handleExport = (type) => {
         setLoadingItem(type);
@@ -43,25 +126,14 @@ function EksporData_Page() {
                         let studentsData = [];
                         if (res.data && res.data.data) {
                             studentsData = res.data.data;
+                            if (profile.mengampu_kelas) {
+                                studentsData = studentsData.filter(s => s.kelas === profile.mengampu_kelas);
+                            }
                         }
 
                         let tableHtml = `<html xmlns:x="urn:schemas-microsoft-com:office:excel">
   <head>
     <meta charset="utf-8">
-    <!--[if gte mso 9]>
-    <xml>
-      <x:ExcelWorkbook>
-        <x:ExcelWorksheets>
-          <x:ExcelWorksheet>
-            <x:Name>Data Nilai Siswa</x:Name>
-            <x:WorksheetOptions>
-              <x:DisplayGridlines/>
-            </x:WorksheetOptions>
-          </x:ExcelWorksheet>
-        </x:ExcelWorksheets>
-      </x:ExcelWorkbook>
-    </xml>
-    <![endif]-->
     <style>
       th { background-color: #4CAF50; color: white; border: 1px solid #ddd; padding: 8px; }
       td { border: 1px solid #ddd; padding: 8px; }
@@ -119,7 +191,7 @@ function EksporData_Page() {
                         const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                         const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                         setRiwayatEkspor(prev => [
-                            { label: `Data Nilai (${dateStr} ${timeStr})`, type: 'Excel', typeClass: 'ekd-badge-excel' },
+                            { label: `Data Nilai (${dateStr} ${timeStr})`, type: 'Excel', typeClass: 'fmt-excel' },
                             ...prev
                         ]);
                     })
@@ -131,7 +203,7 @@ function EksporData_Page() {
                 const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                 const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 setRiwayatEkspor(prev => [
-                    { label: `Laporan Kesiapan (${dateStr} ${timeStr})`, type: 'PDF', typeClass: 'ekd-badge-pdf' },
+                    { label: `Laporan Kesiapan (${dateStr} ${timeStr})`, type: 'PDF', typeClass: 'fmt-pdf' },
                     ...prev
                 ]);
                 window.print();
@@ -139,173 +211,84 @@ function EksporData_Page() {
         }, 1800);
     };
 
-
-
     return (
-        <div className="ekd-container">
+        <div className="db-shell">
+            <Sidebar active="ekspor" onNavigate={handleNavigate} />
 
-            {/* --- MOBILE HEADER --- */}
-            <div className="dbs-mobile-header">
-                <div className="dbs-mobile-brand">
-                    <span className="dbs-mobile-brand-title">SNBP Monitor</span>
-                    <span className="dbs-mobile-brand-sub">Sistem Cerdas Kesiapan Siswa</span>
-                </div>
-                <button
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    className="dbs-mobile-toggle"
-                    aria-label="Toggle Menu"
-                >
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">
-                        {isMobileMenuOpen ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                        )}
-                    </svg>
-                </button>
-            </div>
+            <div className="db-main">
+                <Topbar title="Ekspor Data" subtitle="Pilih data yang ingin diekspor"  profile={profile} />
 
-            {/* --- SIDEBAR --- */}
-            <aside className={`dbs-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
-                <div>
-                    <div className="dbs-brand">
-                        <h1 className="dbs-brand-title">SNBP Monitor</h1>
-                        <p className="dbs-brand-sub">Sistem Cerdas Kesiapan Siswa</p>
-                    </div>
-
-                    <nav className="dbs-nav">
-                        <div className="db-nav-group">
-                            <span className="db-nav-group-label">MENU UTAMA</span>
-                            <button className="dbs-nav-item" onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }} type="button">
-                                <span className="dbs-nav-icon">⊞</span><span>Dashboard</span>
-                            </button>
-                            <button className="dbs-nav-item" onClick={() => { navigate('/prediksi-siswa'); setIsMobileMenuOpen(false); }} type="button">
-                                <span className="dbs-nav-icon">◎</span><span>Prediksi Siswa</span>
-                            </button>
-                            <button className="dbs-nav-item" onClick={() => { navigate('/data-nilai'); setIsMobileMenuOpen(false); }} type="button">
-                                <span className="dbs-nav-icon">≡</span><span>Data Nilai</span>
-                            </button>
-                            <button className="dbs-nav-item" onClick={() => { navigate('/monitoring-kelas'); setIsMobileMenuOpen(false); }} type="button">
-                                <span className="dbs-nav-icon">◫</span><span>Monitoring Kelas</span>
-                            </button>
-                            <button className="dbs-nav-item" onClick={() => { navigate('/tambah-siswa'); setIsMobileMenuOpen(false); }} type="button">
-                                <span className="dbs-nav-icon">✚</span><span>Tambah Data Siswa</span>
-                            </button>
-                        </div>
-                        <div className="db-nav-group">
-                            <span className="db-nav-group-label" style={{ marginTop: '16px' }}>LAPORAN</span>
-                            <button className="dbs-nav-item" onClick={() => { navigate('/statistik-snbp'); setIsMobileMenuOpen(false); }} type="button">
-                                <span className="dbs-nav-icon">⊟</span><span>Statistik SNBP</span>
-                            </button>
-                            <button className="dbs-nav-item active" onClick={() => setIsMobileMenuOpen(false)} type="button">
-                                <span className="dbs-nav-icon">↓</span><span>Ekspor Data</span>
-                            </button>
-                        </div>
-                    </nav>
-                </div>
-
-                <div className="dbs-sidebar-bottom">
-                    <button className="dbs-nav-item" onClick={() => { navigate('/notifikasi'); setIsMobileMenuOpen(false); }}>
-                        <span className="dbs-nav-icon">🔔</span><span>Notifikasi</span>
-                    </button>
-                    <button className="dbs-nav-item" onClick={() => { navigate('/pengaturan'); setIsMobileMenuOpen(false); }}>
-                        <span className="dbs-nav-icon">⚙</span><span>Pengaturan</span>
-                    </button>
-                    <button onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('role'); navigate('/'); }} className="dbs-nav-item dbs-nav-logout">
-                        <span className="dbs-nav-icon">⏻</span><span>Keluar</span>
-                    </button>
-                </div>
-            </aside>
-
-            {/* --- MAIN CONTENT --- */}
-            <div className="ekd-main">
-
-                {/* Topbar */}
-                <header className="dbs-topbar">
-                    <div className="dbs-page-info">
-                        <h2 className="dbs-page-title">Ekspor Data</h2>
-                        <p className="dbs-page-sub">Pilih data yang ingin diekspor</p>
-                    </div>
-                    <div className="dbs-profile-info">
-                        <div className="dbs-profile-text">
-                            <span className="dbs-profile-name">Ibu Sari</span>
-                            <span className="dbs-profile-role">Wali Kelas XII IPA 1</span>
-                        </div>
-                        <div className="dbs-avatar">SR</div>
-                    </div>
-                </header>
-
-                {/* Content */}
-                <main className="ekd-content">
-                    <div className="ekd-grid">
+                <main className="db-content ekspor-content-wrapper">
+                    <div className="ekspor-grid-row">
 
                         {/* ---- LEFT: Ekspor Cards ---- */}
-                        <div className="ekd-left">
+                        <div className="ekspor-options-stack">
 
                             {/* Card 1: Laporan Kesiapan SNBP */}
-                            <div className="ekd-card">
-                                <div className="ekd-card-header">
+                            <div className="db-card ekspor-opt-card">
+                                <div className="ekspor-opt-header">
                                     <div>
-                                        <h3 className="ekd-card-title">Laporan kesiapan SNBP</h3>
-                                        <p className="ekd-card-desc">
+                                        <h3 className="ekspor-opt-title">Laporan kesiapan SNBP</h3>
+                                        <p className="ekspor-opt-desc">
                                             Ringkasan status kesiapan dan rekomendasi per kelas.
                                         </p>
                                     </div>
-                                    <span className="ekd-badge ekd-badge-pdf">PDF</span>
+                                    <span className="ekspor-fmt-badge fmt-pdf">PDF</span>
                                 </div>
                                 <button
-                                    className={`ekd-btn ${loadingItem === 'pdf' ? 'ekd-btn-loading' : ''}`}
+                                    className={`ekspor-action-btn ${loadingItem === 'pdf' ? 'loading' : ''}`}
                                     onClick={() => handleExport('pdf')}
                                     disabled={loadingItem === 'pdf'}
                                 >
                                     {loadingItem === 'pdf' ? (
-                                        <span className="ekd-spinner"></span>
+                                        <span>...</span>
                                     ) : (
-                                        <>Buat laporan <span className="ekd-btn-arrow">↗</span></>
+                                        <>Buat laporan <span className="arrow-icon">↗</span></>
                                     )}
                                 </button>
                             </div>
 
                             {/* Card 2: Data Nilai Seluruh Siswa */}
-                            <div className="ekd-card">
-                                <div className="ekd-card-header">
+                            <div className="db-card ekspor-opt-card">
+                                <div className="ekspor-opt-header">
                                     <div>
-                                        <h3 className="ekd-card-title">Data nilai seluruh siswa</h3>
-                                        <p className="ekd-card-desc">
-                                            Semua nilai per mata pelajaran semester 1–5 dalam format spreadsheet.
+                                        <h3 className="ekspor-opt-title">Data nilai kelas {profile.mengampu_kelas || 'yang diampu'}</h3>
+                                        <p className="ekspor-opt-desc">
+                                            Semua nilai siswa per mata pelajaran semester 1–5 dalam format spreadsheet.
                                         </p>
                                     </div>
-                                    <span className="ekd-badge ekd-badge-excel">Excel</span>
+                                    <span className="ekspor-fmt-badge fmt-excel">Excel</span>
                                 </div>
                                 <button
-                                    className={`ekd-btn ${loadingItem === 'excel' ? 'ekd-btn-loading' : ''}`}
+                                    className={`ekspor-action-btn ${loadingItem === 'excel' ? 'loading' : ''}`}
                                     onClick={() => handleExport('excel')}
                                     disabled={loadingItem === 'excel'}
                                 >
                                     {loadingItem === 'excel' ? (
-                                        <span className="ekd-spinner"></span>
+                                        <span>...</span>
                                     ) : (
-                                        <>Ekspor Excel <span className="ekd-btn-arrow">↗</span></>
+                                        <>Ekspor Excel <span className="arrow-icon">↗</span></>
                                     )}
                                 </button>
                             </div>
 
-
-
                         </div>
 
                         {/* ---- RIGHT: Riwayat Ekspor ---- */}
-                        <div className="ekd-right">
-                            <div className="ekd-card ekd-riwayat-card">
-                                <h3 className="ekd-card-title">Riwayat ekspor</h3>
-                                <div className="ekd-riwayat-list">
-                                    {riwayatEkspor.map((item, idx) => (
-                                        <div key={idx} className="ekd-riwayat-item">
-                                            <span className="ekd-riwayat-label">{item.label}</span>
-                                            <span className={`ekd-badge ${item.typeClass}`}>{item.type}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                        <div className="db-card ekspor-history-card">
+                            <div className="db-card-header" style={{ marginBottom: '14px' }}>
+                                <span className="db-card-title">Riwayat ekspor</span>
+                            </div>
+                            <div className="ekspor-history-list">
+                                {riwayatEkspor.map((item, idx) => (
+                                    <div key={idx} className="ekspor-history-row">
+                                        <span className="ekspor-history-name">{item.label}</span>
+                                        <span className={`ekspor-fmt-badge ${item.typeClass}`}>{item.type}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="ekspor-history-footer">
+                                Tersimpan secara lokal di perangkat Anda
                             </div>
                         </div>
 
@@ -313,11 +296,11 @@ function EksporData_Page() {
                 </main>
             </div>
 
-            {/* --- PRINTABLE REPORT (Hidden on screen, shown when printing) --- */}
+            {/* --- PRINTABLE REPORT --- */}
             <div className="print-report-container">
                 <div className="print-report-header">
                     <h2>Laporan Kesiapan SNBP</h2>
-                    <p>Ringkasan status kesiapan dan rekomendasi per kelas</p>
+                    <p>Ringkasan status kesiapan dan rekomendasi kelas {profile.mengampu_kelas}</p>
                     <p style={{ fontSize: '12px', color: '#666' }}>Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</p>
                 </div>
                 <table className="print-report-table">
@@ -331,7 +314,7 @@ function EksporData_Page() {
                         </tr>
                     </thead>
                     <tbody>
-                        {statsData.length > 0 ? statsData.map((k, i) => (
+                        {statsData.length > 0 ? statsData.filter(k => k.kelas === profile.mengampu_kelas).map((k, i) => (
                             <tr key={k.kelas}>
                                 <td>{k.kelas}</td>
                                 <td>{k.wali || `Wali Kelas ${i + 1}`}</td>

@@ -5,11 +5,28 @@ import api from '../../api/axios';
 
 function StatistikSNBP_Page() {
     const navigate = useNavigate();
+    const [user, setUser] = useState({ nama: 'ADMIN', role: 'Kepala Sekolah' });
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) {
+                    setUser({ nama: res.data.data.nama, role: res.data.data.role === 'admin' ? 'Administrator' : 'Kepala Sekolah' });
+                }
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
 
     const handleLogout = () => {
-        navigate('/');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/', {
+            replace: true
+        });
     };
 
     const [data, setData] = useState(null);
@@ -140,15 +157,15 @@ function StatistikSNBP_Page() {
 
                 <div className="dbs-sidebar-bottom">
 
-                        <button className="dbs-nav-item" onClick={() => { navigate('/admin/notifikasi'); setIsMobileMenuOpen(false); }}>
-                            <span className="dbs-nav-icon">🔔</span>
-                            <span>Notifikasi</span>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/admin/notifikasi'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">🔔</span>
+                        <span>Notifikasi</span>
                         <span className="dbs-notif-badge">1</span>
-                        </button>
-                        <button className="dbs-nav-item" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
-                            <span className="dbs-nav-icon">⚙</span>
-                            <span>Pengaturan</span>
-                        </button>
+                    </button>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">⚙</span>
+                        <span>Pengaturan</span>
+                    </button>
 
                     <button onClick={handleLogout} className="dbs-nav-item dbs-nav-logout">
                         <span className="dbs-nav-icon">⏻</span>
@@ -168,10 +185,10 @@ function StatistikSNBP_Page() {
                     </div>
                     <div className="snbs-profile-info">
                         <div className="snbs-profile-text">
-                            <span className="snbs-profile-name">Bapak Hartono</span>
-                            <span className="snbs-profile-role">Kepala Sekolah</span>
+                            <span className="snbs-profile-name">{user.nama || 'ADMIN'}</span>
+                            <span className="snbs-profile-role">{user.role || (user.role === 'admin' ? 'Administrator' : 'Kepala Sekolah')}</span>
                         </div>
-                        <div className="snbs-avatar">HT</div>
+                        <div className="snbs-avatar">{user.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                     </div>
                 </header>
 
@@ -229,9 +246,9 @@ function StatistikSNBP_Page() {
                                             </thead>
                                             <tbody>
                                                 {loading ? (
-                                                    <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>Memuat data...</td></tr>
+                                                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>Memuat data...</td></tr>
                                                 ) : kelasPerforma.length === 0 ? (
-                                                    <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>Belum ada data</td></tr>
+                                                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>Belum ada data</td></tr>
                                                 ) : (
                                                     kelasPerforma.map((row) => (
                                                         <tr key={row.kelas}>
@@ -264,7 +281,7 @@ function StatistikSNBP_Page() {
                                         <h3 className="snbs-card-title">Kesiapan per kelas</h3>
                                         <div className="snbs-bar-chart">
                                             {loading ? (
-                                                <div style={{textAlign: 'center', padding: '20px'}}>Memuat grafik...</div>
+                                                <div style={{ textAlign: 'center', padding: '20px' }}>Memuat grafik...</div>
                                             ) : kelasPerforma.map((row) => (
                                                 <div key={row.kelas} className="snbs-bar-row">
                                                     <span className="snbs-bar-row-label">{row.kelas}</span>

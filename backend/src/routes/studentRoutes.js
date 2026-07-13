@@ -9,11 +9,11 @@ const {
 } = require('../controllers/studentController');
 const { protect, restrictTo } = require('../middleware/authMiddleware');
 
-// GET    /api/v1/students       → ambil semua siswa (hanya guru & admin)
-router.get('/',      protect, restrictTo('guru', 'admin'), getAllStudents);
+// GET    /api/v1/students       → ambil semua siswa (guru, admin, ortu)
+router.get('/',      protect, restrictTo('guru', 'admin', 'ortu'), getAllStudents);
 
-// GET    /api/v1/students/:id   → ambil 1 siswa (hanya guru & admin)
-router.get('/:id',   protect, restrictTo('guru', 'admin'), getStudentById);
+// GET    /api/v1/students/:id   → ambil 1 siswa (guru, admin, ortu)
+router.get('/:id',   protect, restrictTo('guru', 'admin', 'ortu'), getStudentById);
 
 // POST   /api/v1/students       → tambah siswa baru (hanya admin & guru)
 router.post('/',     protect, restrictTo('admin', 'guru'), createStudent);

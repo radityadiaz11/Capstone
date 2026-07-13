@@ -9,10 +9,13 @@ function DashboardOrtu_Page() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = () => {
-        navigate('/');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/', { replace: true });
     };
 
     const [student, setStudent] = useState(null);
+    const [profile, setProfile] = useState({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -20,9 +23,10 @@ function DashboardOrtu_Page() {
             try {
                 const res = await api.get('/students');
                 if (res.data.success && res.data.data.length > 0) {
-                    // Use first student as the child
                     setStudent(res.data.data[0]);
                 }
+                const resProfile = await api.get('/users/profile');
+                if (resProfile.data.success) setProfile(resProfile.data.data);
             } catch (error) {
                 console.error('Error fetching student:', error);
             } finally {
@@ -33,23 +37,28 @@ function DashboardOrtu_Page() {
     }, []);
 
     const s = student || {};
-    const examScore = s.exam_score || 0;
-    const avgAttendance = s.attendance_w1 != null
-        ? (((s.attendance_w1 || 0) + (s.attendance_w2 || 0) + (s.attendance_w3 || 0) + (s.attendance_w4 || 0)) / 4).toFixed(0)
-        : '—';
-
-    const subjects = [
+    const subjectsRaw = [
         { name: 'Matematika', score: s.math_score || 0, color: (s.math_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
         { name: 'Bahasa Indonesia', score: s.indo_score || 0, color: (s.indo_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
         { name: 'Biologi', score: s.bio_score || 0, color: (s.bio_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
         { name: 'Kimia', score: s.chem_score || 0, color: (s.chem_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
         { name: 'Fisika', score: s.phy_score || 0, color: (s.phy_score || 0) < 75 ? '#ff9f1c' : '#16a34a' },
         { name: 'Bahasa Inggris', score: s.eng_score || 0, color: (s.eng_score || 0) < 75 ? '#A32D2D' : '#16a34a' },
-    ].filter(sub => sub.score > 0);
+    ];
+    const subjects = subjectsRaw.filter(sub => sub.score > 0);
+    const avgRapor = subjects.length > 0 
+        ? subjects.reduce((acc, curr) => acc + curr.score, 0) / subjects.length 
+        : 0;
+
+    const examScore = s.exam_score ? s.exam_score : avgRapor;
+    const avgAttendance = s.attendance_w1 != null
+        ? (((s.attendance_w1 || 0) + (s.attendance_w2 || 0) + (s.attendance_w3 || 0) + (s.attendance_w4 || 0)) / 4).toFixed(0)
+        : (subjects.length > 0 ? 100 : '—');
+
+    const isWarning = (examScore > 0 && examScore < 75) || (avgAttendance !== '—' && avgAttendance < 85);
 
     return (
         <div className="db-ortu-container">
-
             {/* --- MOBILE HEADER & TOGGLE --- */}
             <div className="db-ortu-mobile-header">
                 <div className="db-ortu-mobile-brand">
@@ -93,8 +102,8 @@ function DashboardOrtu_Page() {
                         <span className="db-ortu-nav-label">Menu</span>
 
                         <button
-                            onClick={() => { setActiveTab('beranda'); setIsMobileMenuOpen(false); }}
-                            className={`db-ortu-nav-item ${activeTab === 'beranda' ? 'active' : ''}`}
+                            onClick={() => { setActiveTab('beranda'); setIsMobileMenuOpen(false); navigate('/ortu/dashboard'); }}
+                            className={`db-ortu-nav-item active`}
                         >
                             <span className="db-ortu-nav-icon">⊞</span>
                             <span>Beranda</span>
@@ -102,7 +111,7 @@ function DashboardOrtu_Page() {
 
                         <button
                             onClick={() => { navigate('/ortu/nilai'); setIsMobileMenuOpen(false); }}
-                            className={`db-ortu-nav-item ${activeTab === 'rapor' ? 'active' : ''}`}
+                            className={`db-ortu-nav-item`}
                         >
                             <span className="db-ortu-nav-icon">≡</span>
                             <span>Nilai Rapor</span>
@@ -110,7 +119,7 @@ function DashboardOrtu_Page() {
 
                         <button
                             onClick={() => { navigate('/ortu/prediksi-snbp'); setIsMobileMenuOpen(false); }}
-                            className={`db-ortu-nav-item ${activeTab === 'prediksi' ? 'active' : ''}`}
+                            className={`db-ortu-nav-item`}
                         >
                             <span className="db-ortu-nav-icon">◎</span>
                             <span>Prediksi SNBP</span>
@@ -122,7 +131,7 @@ function DashboardOrtu_Page() {
                 <div className="db-ortu-sidebar-bottom">
                     <button
                         onClick={() => { navigate('/ortu/notifikasi'); setIsMobileMenuOpen(false); }}
-                        className={`db-ortu-nav-item ${activeTab === 'notifikasi' ? 'active' : ''}`}
+                        className={`db-ortu-nav-item`}
                     >
                         <span className="db-ortu-nav-icon">🔔</span>
                         <span>Notifikasi</span>
@@ -132,7 +141,7 @@ function DashboardOrtu_Page() {
 
                     <button
                         onClick={() => { navigate('/ortu/pengaturan'); setIsMobileMenuOpen(false); }}
-                        className={`db-ortu-nav-item ${activeTab === 'pengaturan' ? 'active' : ''}`}
+                        className={`db-ortu-nav-item`}
                     >
                         <span className="db-ortu-nav-icon">⚙</span>
                         <span>Pengaturan</span>
@@ -150,7 +159,6 @@ function DashboardOrtu_Page() {
 
             {/* --- MAIN CONTENT AREA (RIGHT) --- */}
             <div className="db-ortu-main">
-
                 {/* Sticky Topbar */}
                 <header className="db-ortu-topbar">
                     <div className="db-ortu-page-info">
@@ -161,113 +169,96 @@ function DashboardOrtu_Page() {
                     {/* User Profile + Avatar */}
                     <div className="db-ortu-profile-info">
                         <div className="db-ortu-profile-text">
-                            <span className="db-ortu-profile-name">Bapak Hidayat</span>
-                            <span className="db-ortu-profile-role">Orang Tua Farhan</span>
+                            <span className="db-ortu-profile-name">{profile.nama || 'ORANG TUA'}</span>
+                            <span className="db-ortu-profile-role">{profile.role === 'ortu' ? 'Orang Tua' : (profile.role || 'Orang Tua')}</span>
                         </div>
                         {/* Avatar using blue #185FA5 details */}
                         <div className="db-ortu-avatar">
-                            HN
+                            {profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'OT'}
                         </div>
                     </div>
                 </header>
 
                 {/* Content Container */}
                 <main className="db-ortu-content">
-
-                    {/* Alert Banner Merah - #A32D2D */}
-                    <div className="db-ortu-alert-banner">
+                    {/* Alert Banner */}
+                    <div className="db-ortu-alert-banner" style={!isWarning && examScore > 0 ? { backgroundColor: '#f0fdf4', borderColor: '#dcfce3', color: '#166534' } : {}}>
                         <div className="db-ortu-alert-left">
                             <div className="db-ortu-alert-icon">
-                                ⚠️
+                                {!isWarning && examScore > 0 ? '✅' : '⚠️'}
                             </div>
                             <div className="db-ortu-alert-text">
-                                <h3 className="db-ortu-alert-title">
-                                    {examScore < 40 ? 'Perhatian diperlukan' : 'Status akademik'} untuk {s.nama || 'anak Anda'}
+                                <h3 className="db-ortu-alert-title" style={!isWarning && examScore > 0 ? { color: '#166534' } : {}}>
+                                    {!isWarning && examScore > 0 ? 'Performa akademik sangat baik' : 'Perhatian diperlukan'} untuk {s.nama || 'anak Anda'}
                                 </h3>
-                                <p className="db-ortu-alert-desc">
-                                    Exam Score: {examScore.toFixed(0)} &bull; Kehadiran: {avgAttendance}%
+                                <p className="db-ortu-alert-desc" style={!isWarning && examScore > 0 ? { color: '#15803d' } : {}}>
+                                    Exam Score: {examScore.toFixed(0)} &bull; Kehadiran: {avgAttendance}{avgAttendance !== '—' ? '%' : ''}
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={() => navigate('/ortu/nilai')}
                             className="db-ortu-alert-btn"
+                            style={!isWarning && examScore > 0 ? { color: '#166534', borderColor: '#166534' } : {}}
                         >
                             Lihat Rapor &rarr;
                         </button>
                     </div>
 
-                    {/* 2 Metric Cards - Burgundy Red #A32D2D */}
+                    {/* 2 Metric Cards */}
                     <div className="db-ortu-stats-grid">
-
                         {/* Card 1: Rata-rata Nilai */}
                         <div className="db-ortu-stat-card">
                             <span className="db-ortu-stat-label">Exam Score</span>
                             <div className="db-ortu-stat-value">{loading ? '—' : examScore.toFixed(0)}</div>
                             <div className="db-ortu-stat-sub">
-                                <span>{examScore < 20 ? '⚠️' : '📊'}</span> Data dari database
+                                <span>{examScore < 75 ? '⚠️' : '📊'}</span> {s.exam_score ? 'Data dari database' : 'Estimasi rata-rata rapor'}
                             </div>
                         </div>
 
                         {/* Card 2: Kehadiran */}
                         <div className="db-ortu-stat-card">
                             <span className="db-ortu-stat-label">Kehadiran rata-rata</span>
-                            <div className="db-ortu-stat-value">{loading ? '—' : `${avgAttendance}%`}</div>
+                            <div className="db-ortu-stat-value">{loading ? '—' : (avgAttendance !== '—' ? `${avgAttendance}%` : '—')}</div>
                             <div className="db-ortu-stat-sub">
-                                {parseInt(avgAttendance) < 85 ? 'Di bawah standar 85%' : 'Memenuhi standar'}
+                                {avgAttendance !== '—' && parseInt(avgAttendance) < 85 ? 'Di bawah standar 85%' : 'Memenuhi standar'}
                             </div>
                         </div>
-
                     </div>
 
                     {/* 2 Kolom Layout */}
                     <div className="db-ortu-bottom-grid">
-
-                        {/* KOLOM KIRI: Card nilai per mapel dengan progress bar (Grid col-span 7) */}
+                        {/* KOLOM KIRI */}
                         <section className="db-ortu-card">
                             <div className="db-ortu-card-header">
                                 <h3 className="db-ortu-card-title">Nilai per mata pelajaran</h3>
-
-                                {/* Semester Indicator - Blue #185FA5 */}
-                                <span className="db-ortu-semester-badge">
-                                    Sem. 5
-                                </span>
+                                <span className="db-ortu-semester-badge">Sem. 5</span>
                             </div>
 
-                            {/* Subject Rows */}
                             <div className="db-ortu-subject-list">
-                                {subjects.map((sub) => (
-                                    <div key={sub.name} className="db-ortu-subject-row">
-                                        {/* Mapel Name */}
+                                {subjects.map((sub, i) => (
+                                    <div key={i} className="db-ortu-subject-row">
                                         <span className="db-ortu-subject-name">{sub.name}</span>
-
-                                        {/* Progress Bar Track */}
                                         <div className="db-ortu-progress-track">
                                             <div
                                                 className="db-ortu-progress-fill"
                                                 style={{ width: `${sub.score}%`, backgroundColor: sub.color }}
                                             />
                                         </div>
-
-                                        {/* Score Value */}
                                         <span className="db-ortu-progress-score">{sub.score}</span>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* KKM Warning Label */}
                             <div className="db-ortu-kkm-note">
                                 KKM: 75 &bull; Data dari database
                             </div>
                         </section>
 
-                        {/* KOLOM KANAN: Card Sesi Konseling (Grid col-span 5) */}
+                        {/* KOLOM KANAN */}
                         <div className="db-ortu-right-stack">
-
-                            {/* Card Sesi Konseling Terjadwal */}
                             <section className="db-ortu-card">
                                 <h3 className="db-ortu-card-title">Sesi konseling terjadwal</h3>
-
                                 <div className="db-ortu-list-rows">
                                     <div className="db-ortu-list-row">
                                         <span className="db-ortu-list-label">Tanggal</span>
@@ -278,22 +269,16 @@ function DashboardOrtu_Page() {
                                         <span className="db-ortu-list-val">Motivasi & kehadiran</span>
                                     </div>
                                 </div>
-
                                 <div>
-                                    {/* Badge using Teal #0D7A7A details */}
                                     <span className="db-ortu-teal-badge">
                                         Terjadwal
                                     </span>
                                 </div>
                             </section>
-
                         </div>
-
                     </div>
-
                 </main>
             </div>
-
         </div>
     );
 }

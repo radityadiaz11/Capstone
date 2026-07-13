@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import './PengaturanOrtu_Page.css';
@@ -8,14 +8,18 @@ function PengaturanOrtu_Page() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Notification preferences state to enable toggle interaction
-  const [profile, setProfile] = useState({ nama: 'Bapak Hidayat', email: 'hidayat.nugroho@gmail.com', role: 'ortu' });
+  const [profile, setProfile] = useState({ nama: 'ORANG TUA', email: '', role: 'ortu' });
+  const [student, setStudent] = useState(null);
+  const s = student || {};
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await api.get('/users/profile');
+        const resStud = await api.get('/students');
+        if (resStud.data.success && resStud.data.data.length > 0) setStudent(resStud.data.data[0]);
         if (res.data.success) setProfile(res.data.data);
       } catch (err) { console.error('Gagal memuat profil', err); }
     };
@@ -42,7 +46,7 @@ function PengaturanOrtu_Page() {
 
   const handleLogout = () => {
     localStorage.removeItem('token'); localStorage.removeItem('role');
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   const togglePref = (key) => {
@@ -163,12 +167,10 @@ function PengaturanOrtu_Page() {
           {/* User Profile + Avatar */}
           <div className="po-profile-info">
             <div className="po-profile-text">
-              <span className="po-profile-name">{profile.nama || 'Bapak Hidayat'}</span>
-              <span className="po-profile-role">Orang Tua Farhan</span>
+              <span className="po-profile-name">{profile.nama || 'ORANG TUA'}</span>
+              <span className="po-profile-role">{profile.role === 'ortu' ? 'Orang Tua' : (profile.role || 'Orang Tua')}</span>
             </div>
-            <div className="po-avatar">
-              HN
-            </div>
+            <div className="po-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'OT'}</div>
           </div>
         </header>
 
@@ -181,10 +183,10 @@ function PengaturanOrtu_Page() {
               <h3 className="po-card-title">Profil Orang Tua</h3>
 
               <div className="po-avatar-section">
-                <div className="po-profile-avatar">HN</div>
+                <div className="po-profile-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'OT'}</div>
                 <div className="po-profile-meta">
                   <h4 className="po-profile-name-full">{profile.nama}</h4>
-                  <p className="po-profile-desc">Orang Tua Farhan Hidayat · XII IPA 1</p>
+                  <p className="po-profile-desc">Orang Tua {s.nama || 'Siswa'} · {s.kelas || 'Siswa'}</p>
                 </div>
               </div>
 
@@ -201,7 +203,7 @@ function PengaturanOrtu_Page() {
                 </div>
                 <div className="po-detail-row">
                   <span className="po-detail-label">Anak terdaftar</span>
-                  <span className="po-detail-value bold">Farhan Hidayat</span>
+                  <span className="po-detail-value bold">{s.nama || 'Siswa'}</span>
                 </div>
               </div>
 
@@ -252,6 +254,33 @@ function PengaturanOrtu_Page() {
           </div>
         </main>
       </div>
+
+      {/* Modal Edit Profil */}
+      {isEditOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: '90%', maxWidth: '400px' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Edit Profil</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Nama Lengkap</label>
+                <input type="text" value={editForm.nama || ''} onChange={e => setEditForm({ ...editForm, nama: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Email</label>
+                <input type="email" value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Password Baru</label>
+                <input type="password" value={editForm.password || ''} onChange={e => setEditForm({ ...editForm, password: e.target.value })} placeholder="Kosongkan jika tak ingin diubah" style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setIsEditOpen(false)} style={{ background: '#f1f5f9', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Batal</button>
+              <button onClick={handleSaveProfile} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Simpan</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

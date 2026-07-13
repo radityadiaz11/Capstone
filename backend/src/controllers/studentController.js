@@ -6,6 +6,40 @@ const {
   setInMemoryStudents
 } = require('../config/dataStore');
 
+const formatSequelizeError = (error) => {
+  if (error.name === 'SequelizeUniqueConstraintError') {
+    const field = error.errors && error.errors[0] ? error.errors[0].path : '';
+    if (field === 'id' || field === 'PRIMARY') {
+      return 'Internal Database Error: ID Auto-increment bentrok (Sequence out of sync).';
+    }
+    return `NISN sudah terdaftar.`;
+  }
+  if (error.name === 'SequelizeValidationError') {
+    return error.errors.map(e => {
+      const fieldMap = {
+        student_id: 'NISN',
+        nama: 'Nama',
+        prodi: 'Program Studi',
+        math_score: 'Nilai Matematika',
+        indo_score: 'Nilai B. Indo',
+        eng_score: 'Nilai B. Inggris',
+        bio_score: 'Nilai Biologi',
+        chem_score: 'Nilai Kimia',
+        phy_score: 'Nilai Fisika'
+      };
+      const fieldName = fieldMap[e.path] || e.path;
+      if (e.validatorKey === 'isFloat' || e.validatorKey === 'isNumeric') {
+        return `${fieldName} harus berupa angka.`;
+      }
+      if (e.validatorKey === 'notEmpty' || e.validatorKey === 'notNull') {
+        return `${fieldName} tidak boleh kosong.`;
+      }
+      return `${fieldName} tidak valid.`;
+    }).join(' | ');
+  }
+  return error.message;
+};
+
 // ================================================
 // GET SEMUA SISWA
 // GET /api/v1/students
@@ -82,7 +116,7 @@ const createStudent = async (req, res) => {
       student = await Student.create(req.body);
     } else {
       const list = getInMemoryStudents();
-      const exists = list.find(s => s.student_id === parseInt(student_id));
+      const exists = list.find(s => String(s.student_id) === String(student_id));
       if (exists) {
         return res.status(400).json({
           success: false,
@@ -103,7 +137,10 @@ const createStudent = async (req, res) => {
       data:    student
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (error.name === 'SequelizeUniqueConstraintError' || error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ success: false, message: formatSequelizeError(error) });
+    }
+    res.status(500).json({ success: false, message: `[${error.name}] ${error.message}` });
   }
 };
 
@@ -129,7 +166,7 @@ const updateStudent = async (req, res) => {
     } else {
       const list  = getInMemoryStudents();
       const index = list.findIndex(
-        s => s.student_id === parseInt(req.params.id)
+        s => String(s.student_id) === String(req.params.id)
       );
       if (index === -1) {
         return res.status(404).json({
@@ -148,6 +185,9 @@ const updateStudent = async (req, res) => {
       data:    student
     });
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError' || error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ success: false, message: formatSequelizeError(error) });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };

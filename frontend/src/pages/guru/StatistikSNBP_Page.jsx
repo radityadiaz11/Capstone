@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css'; // Share the premium layout and sidebar style
@@ -52,7 +53,7 @@ function Sidebar({ active, onNavigate }) {
   );
 }
 
-function Topbar({ title = 'Statistik SNBP', subtitle = 'Tahun Ajaran 2025/2026' }) {
+function Topbar({ title = 'Statistik SNBP', subtitle = 'Tahun Ajaran 2025/2026', profile = {} }) {
   return (
     <header className="db-topbar">
       <div className="db-topbar-left">
@@ -61,16 +62,27 @@ function Topbar({ title = 'Statistik SNBP', subtitle = 'Tahun Ajaran 2025/2026' 
       </div>
       <div className="db-topbar-right">
         <div className="db-profile-info">
-          <span className="db-profile-name">Ibu Sari</span>
-          <span className="db-profile-role">Wali Kelas XII IPA 1</span>
-        </div>
-        <div className="db-avatar">SR</div>
+                    <span className="db-profile-name">{profile.nama || 'Ibu Sari'}</span>
+                    <span className="db-profile-role">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'}</span>
+                </div>
+                <div className="db-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
       </div>
     </header>
   );
 }
 
 export default function StatistikSNBP_Page() {
+    const [profile, setProfile] = React.useState({});
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) setProfile(res.data.data);
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
+
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -93,16 +105,16 @@ export default function StatistikSNBP_Page() {
   }, []);
 
   const handleNavigate = (id) => {
-    if (id === 'dashboard') navigate('/dashboard');
-    if (id === 'prediksi') navigate('/prediksi-siswa');
-    if (id === 'nilai') navigate('/data-nilai');
-    if (id === 'monitoring') navigate('/monitoring-kelas');
-    if (id === 'tambah-siswa') navigate('/tambah-siswa');
-    if (id === 'statistik') navigate('/statistik-snbp');
-    if (id === 'ekspor') navigate('/ekspor-data');
-    if (id === 'notifikasi-settings') navigate('/notifikasi');
-    if (id === 'pengaturan') navigate('/pengaturan');
-    if (id === 'keluar') { localStorage.removeItem('token'); localStorage.removeItem('role'); navigate('/'); }
+    if (id === 'dashboard') navigate('/guru/dashboard');
+    if (id === 'prediksi') navigate('/guru/prediksi-siswa');
+    if (id === 'nilai') navigate('/guru/data-nilai');
+    if (id === 'monitoring') navigate('/guru/monitoring-kelas');
+    if (id === 'tambah-siswa') navigate('/guru/tambah-siswa');
+    if (id === 'statistik') navigate('/guru/statistik-snbp');
+    if (id === 'ekspor') navigate('/guru/ekspor-data');
+    if (id === 'notifikasi-settings') navigate('/guru/notifikasi');
+    if (id === 'pengaturan') navigate('/guru/pengaturan');
+    if (id === 'keluar') { localStorage.removeItem('token'); localStorage.removeItem('role'); navigate('/', { replace: true }); }
   };
 
   const totalSiswa = data?.totalSiswa || 0;
@@ -125,7 +137,7 @@ export default function StatistikSNBP_Page() {
       <Sidebar active="statistik" onNavigate={handleNavigate} />
 
       <div className="db-main">
-        <Topbar />
+        <Topbar  profile={profile} />
 
         <main className="db-content">
           {/* Upper 3 Stat Cards */}
@@ -208,9 +220,9 @@ export default function StatistikSNBP_Page() {
                             position: 'relative'
                           }}>
                             {pct > 0 ? (
-                                <span className="stat-bar-val" style={{ color: 'white', fontSize: '13px' }}>{pct}%</span>
+                              <span className="stat-bar-val" style={{ color: 'white', fontSize: '13px' }}>{pct}%</span>
                             ) : (
-                                <span className="stat-bar-val" style={{ color: item.color, fontSize: '13px', position: 'absolute', top: '-22px' }}>0%</span>
+                              <span className="stat-bar-val" style={{ color: item.color, fontSize: '13px', position: 'absolute', top: '-22px' }}>0%</span>
                             )}
                           </div>
                           <span className="stat-bar-label">{item.label} ({item.count})</span>

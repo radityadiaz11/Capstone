@@ -81,7 +81,7 @@ function Sidebar({ active, onNavigate }) {
   );
 }
 
-function Topbar({ title = 'Prediksi Siswa', subtitle = 'Tahun Ajaran 2025/2026', aiStatus }) {
+function Topbar({ title = 'Prediksi Siswa', subtitle = 'Tahun Ajaran 2025/2026', aiStatus, profile = {} }) {
   return (
     <header className="db-topbar">
       <div className="db-topbar-left">
@@ -96,16 +96,26 @@ function Topbar({ title = 'Prediksi Siswa', subtitle = 'Tahun Ajaran 2025/2026',
           </span>
         )}
         <div className="db-profile-info">
-          <span className="db-profile-name">Ibu Sari</span>
-          <span className="db-profile-role">Wali Kelas XII IPA 1</span>
-        </div>
-        <div className="db-avatar">SR</div>
+                    <span className="db-profile-name">{profile.nama || 'Ibu Sari'}</span>
+                    <span className="db-profile-role">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'}</span>
+                </div>
+                <div className="db-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
       </div>
     </header>
   );
 }
 
 const PrediksiSiswa_Page = () => {
+  const [profile, setProfile] = React.useState({});
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/users/profile');
+        if (res.data.success) setProfile(res.data.data);
+      } catch (err) {}
+    };
+    fetchProfile();
+  }, []);
   const [activeFilter, setActiveFilter] = useState('Semua');
   const navigate = useNavigate();
 
@@ -129,9 +139,9 @@ const PrediksiSiswa_Page = () => {
           const mapped = studentsRes.data.data.map(s => {
             const history = s.riwayatPrediksi || [];
             const latestPred = history.length > 0 ? history[history.length - 1] : null;
-            
+
             const score = s.exam_score || 0;
-            
+
             let status = 'Siap';
             if (score < 60) status = 'Berisiko';
 
@@ -238,19 +248,19 @@ const PrediksiSiswa_Page = () => {
   };
 
   const handleNavigate = (id) => {
-    if (id === 'dashboard') navigate('/dashboard');
-    if (id === 'prediksi') navigate('/prediksi-siswa');
-    if (id === 'nilai') navigate('/data-nilai');
-    if (id === 'monitoring') navigate('/monitoring-kelas');
-    if (id === 'tambah-siswa') navigate('/tambah-siswa');
-    if (id === 'statistik') navigate('/statistik-snbp');
-    if (id === 'ekspor') navigate('/ekspor-data');
-    if (id === 'notifikasi-settings') navigate('/notifikasi');
-    if (id === 'pengaturan') navigate('/pengaturan');
+    if (id === 'dashboard') navigate('/guru/dashboard');
+    if (id === 'prediksi') navigate('/guru/prediksi-siswa');
+    if (id === 'nilai') navigate('/guru/data-nilai');
+    if (id === 'monitoring') navigate('/guru/monitoring-kelas');
+    if (id === 'tambah-siswa') navigate('/guru/tambah-siswa');
+    if (id === 'statistik') navigate('/guru/statistik-snbp');
+    if (id === 'ekspor') navigate('/guru/ekspor-data');
+    if (id === 'notifikasi-settings') navigate('/guru/notifikasi');
+    if (id === 'pengaturan') navigate('/guru/pengaturan');
     if (id === 'keluar') {
       localStorage.removeItem('token');
       localStorage.removeItem('role');
-      navigate('/');
+      navigate('/', { replace: true });
     }
   };
 
@@ -259,7 +269,7 @@ const PrediksiSiswa_Page = () => {
       <Sidebar active="prediksi" onNavigate={handleNavigate} />
 
       <div className="db-main">
-        <Topbar title="Prediksi Siswa" subtitle="Tahun Ajaran 2025/2026" aiStatus={aiStatus} />
+        <Topbar profile={profile} title="Prediksi Siswa" subtitle="Tahun Ajaran 2025/2026" aiStatus={aiStatus} />
 
         <main className="db-content">
           <section className="summary-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
@@ -385,7 +395,7 @@ const PrediksiSiswa_Page = () => {
                             </button>
                             <button
                               className="detail-btn"
-                              onClick={() => navigate(`/detail-siswa?id=${student.student_id}`)}
+                              onClick={() => navigate(`/guru/detail-siswa?id=${student.student_id}`)}
                             >
                               Detail
                             </button>

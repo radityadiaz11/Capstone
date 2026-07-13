@@ -6,8 +6,21 @@ import { useAuth } from '../../hooks/useAuth';
 
 function DashboardSekolah_Page() {
     const navigate = useNavigate();
+    const [user, setUser] = useState({ nama: 'ADMIN', role: 'Kepala Sekolah' });
     const { logout } = useAuth(['admin']);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) {
+                    setUser({ nama: res.data.data.nama, role: res.data.data.role === 'admin' ? 'Administrator' : 'Kepala Sekolah' });
+                }
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -160,10 +173,10 @@ function DashboardSekolah_Page() {
                     </div>
                     <div className="dbs-profile-info">
                         <div className="dbs-profile-text">
-                            <span className="dbs-profile-name">Bapak Hartono</span>
-                            <span className="dbs-profile-role">Kepala Sekolah</span>
+                            <span className="dbs-profile-name">{user.nama || 'ADMIN'}</span>
+                            <span className="dbs-profile-role">{user.role || (user.role === 'admin' ? 'Administrator' : 'Kepala Sekolah')}</span>
                         </div>
-                        <div className="dbs-avatar">HT</div>
+                        <div className="dbs-avatar">{user.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                     </div>
                 </header>
 

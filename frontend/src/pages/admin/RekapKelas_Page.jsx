@@ -5,10 +5,27 @@ import api from '../../api/axios';
 
 function RekapKelas_Page() {
     const navigate = useNavigate();
+    const [user, setUser] = useState({ nama: 'ADMIN', role: 'Kepala Sekolah' });
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) {
+                    setUser({ nama: res.data.data.nama, role: res.data.data.role === 'admin' ? 'Administrator' : 'Kepala Sekolah' });
+                }
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = () => {
-        navigate('/');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/', {
+            replace: true
+        });
     };
 
     const [data, setData] = useState(null);
@@ -33,7 +50,7 @@ function RekapKelas_Page() {
     const kelasData = data?.kelasPerforma?.length > 0 ? data.kelasPerforma.map((k, i) => ({
         kelas: k.kelas,
         labelPendek: k.kelas.replace('XII ', ''),
-        wali: k.wali || `Wali Kelas ${i+1}`,
+        wali: k.wali || `Wali Kelas ${i + 1}`,
         total: k.total,
         aman: k.aman,
         berisiko: k.total - k.aman,
@@ -116,15 +133,15 @@ function RekapKelas_Page() {
 
                 <div className="dbs-sidebar-bottom">
 
-                        <button className="dbs-nav-item" onClick={() => { navigate('/admin/notifikasi'); setIsMobileMenuOpen(false); }}>
-                            <span className="dbs-nav-icon">🔔</span>
-                            <span>Notifikasi</span>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/admin/notifikasi'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">🔔</span>
+                        <span>Notifikasi</span>
                         <span className="dbs-notif-badge">1</span>
-                        </button>
-                        <button className="dbs-nav-item" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
-                            <span className="dbs-nav-icon">⚙</span>
-                            <span>Pengaturan</span>
-                        </button>
+                    </button>
+                    <button className="dbs-nav-item" onClick={() => { navigate('/admin/pengaturan'); setIsMobileMenuOpen(false); }}>
+                        <span className="dbs-nav-icon">⚙</span>
+                        <span>Pengaturan</span>
+                    </button>
 
                     <button onClick={handleLogout} className="dbs-nav-item dbs-nav-logout">
                         <span className="dbs-nav-icon">⏻</span>
@@ -143,10 +160,10 @@ function RekapKelas_Page() {
                     </div>
                     <div className="rkp-profile-info">
                         <div className="rkp-profile-text">
-                            <span className="rkp-profile-name">Bapak Hartono</span>
-                            <span className="rkp-profile-role">Kepala Sekolah</span>
+                            <span className="rkp-profile-name">{user.nama || 'ADMIN'}</span>
+                            <span className="rkp-profile-role">{user.role || (user.role === 'admin' ? 'Administrator' : 'Kepala Sekolah')}</span>
                         </div>
-                        <div className="rkp-avatar">HT</div>
+                        <div className="rkp-avatar">{user.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                     </div>
                 </header>
 
@@ -166,9 +183,9 @@ function RekapKelas_Page() {
                                 </thead>
                                 <tbody>
                                     {loading ? (
-                                        <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>Memuat data...</td></tr>
+                                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>Memuat data...</td></tr>
                                     ) : kelasData.length === 0 ? (
-                                        <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>Belum ada data</td></tr>
+                                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>Belum ada data</td></tr>
                                     ) : (
                                         kelasData.map((row, idx) => (
                                             <tr key={row.kelas} className={idx % 2 === 0 ? 'rkp-row-even' : ''}>
@@ -189,9 +206,9 @@ function RekapKelas_Page() {
                         <h3 className="rkp-chart-title">Visualisasi rata-rata nilai rapor per kelas</h3>
                         <div className="rkp-chart-area">
                             {loading ? (
-                                <div style={{width: '100%', height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Memuat visualisasi...</div>
+                                <div style={{ width: '100%', height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Memuat visualisasi...</div>
                             ) : kelasData.length === 0 ? (
-                                <div style={{width: '100%', height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Belum ada data</div>
+                                <div style={{ width: '100%', height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Belum ada data</div>
                             ) : (
                                 kelasData.map((row) => {
                                     const barH = Math.round((row.avgScore / maxScore) * MAX_BAR_HEIGHT);

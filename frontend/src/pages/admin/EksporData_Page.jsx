@@ -5,11 +5,26 @@ import api from '../../api/axios';
 
 function EksporData_Page() {
     const navigate = useNavigate();
+    const [user, setUser] = useState({ nama: 'ADMIN', role: 'Kepala Sekolah' });
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) {
+                    setUser({ nama: res.data.data.nama, role: res.data.data.role === 'admin' ? 'Administrator' : 'Kepala Sekolah' });
+                }
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loadingItem, setLoadingItem] = useState(null);
 
     const handleLogout = () => {
-        navigate('/');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        navigate('/', { replace: true });
     };
 
     const [statsData, setStatsData] = useState([]);
@@ -18,7 +33,7 @@ function EksporData_Page() {
         { label: 'Data Nilai Sem. 5 Semua Kelas', type: 'Excel', typeClass: 'ekd-badge-excel' },
         { label: 'Laporan Kesiapan Maret 2026', type: 'PDF', typeClass: 'ekd-badge-pdf' },
     ]);
-    
+
     useEffect(() => {
         const fetchStats = async () => {
             try {
@@ -269,10 +284,10 @@ function EksporData_Page() {
                     </div>
                     <div className="dbs-profile-info">
                         <div className="dbs-profile-text">
-                            <span className="dbs-profile-name">Bapak Hartono</span>
-                            <span className="dbs-profile-role">Kepala Sekolah</span>
+                            <span className="dbs-profile-name">{user.nama || 'ADMIN'}</span>
+                            <span className="dbs-profile-role">{user.role || (user.role === 'admin' ? 'Administrator' : 'Kepala Sekolah')}</span>
                         </div>
-                        <div className="dbs-avatar">HT</div>
+                        <div className="dbs-avatar">{user.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                     </div>
                 </header>
 

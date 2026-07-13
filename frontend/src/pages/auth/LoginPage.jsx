@@ -11,29 +11,50 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            const role = localStorage.getItem('role');
-            if (role === 'guru') navigate('/dashboard');
-            else if (role === 'ortu') navigate('/ortu/dashboard');
-            else if (role === 'admin') navigate('/admin/dashboard');
-        }
-    }, [navigate]);
+    // useEffect(() => {
+    //     const token = localStorage.getItem('token');
+    //     if (token) {
+    //         const role = localStorage.getItem('role');
+    //         if (role === 'guru') navigate('/guru/dashboard');
+    //         else if (role === 'ortu') navigate('/ortu/dashboard');
+    //         else if (role === 'admin') navigate('/admin/dashboard');
+    //     }
+    // }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setShowError(false);
 
+        if (!email && !password) {
+            setError('Email dan password belum diisi.');
+            setShowError(true);
+            setLoading(false);
+            return;
+        }
+        if (!email) {
+            setError('Email belum diisi.');
+            setShowError(true);
+            setLoading(false);
+            return;
+        }
+        if (!password) {
+            setError('Password belum diisi.');
+            setShowError(true);
+            setLoading(false);
+            return;
+        }
+
         try {
-            const response = await api.post('/auth/login', { email, password });
+            const trimmedEmail = email.trim();
+            const response = await api.post('/auth/login', { email: trimmedEmail, password });
 
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('role', response.data.user.role);
+            localStorage.setItem('nama', response.data.user.nama);
 
             const role = response.data.user.role;
-            if (role === 'guru') navigate('/dashboard');
+            if (role === 'guru') navigate('/guru/dashboard');
             if (role === 'ortu') navigate('/ortu/dashboard');
             if (role === 'admin') navigate('/admin/dashboard');
 
@@ -99,10 +120,7 @@ export default function LoginPage() {
             {showError && error && (
                 <div className="error-banner" role="alert">
                     <span className="error-icon">⚠</span>
-                    <span>
-                        Email atau password salah.{' '}
-                        <strong>Silakan coba lagi.</strong>
-                    </span>
+                    <span>{error}</span>
                 </div>
             )}
         </div>

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css';
@@ -108,7 +109,7 @@ function AiStatusBadge({ status }) {
   );
 }
 
-function Topbar({ title = 'Dashboard', subtitle = 'Tahun Ajaran 2025/2026', aiStatus }) {
+function Topbar({ title = 'Dashboard', subtitle = 'Tahun Ajaran 2025/2026', aiStatus, profile = {} }) {
   return (
     <header className="db-topbar">
       <div className="db-topbar-left">
@@ -118,10 +119,10 @@ function Topbar({ title = 'Dashboard', subtitle = 'Tahun Ajaran 2025/2026', aiSt
       <div className="db-topbar-right">
         <AiStatusBadge status={aiStatus} />
         <div className="db-profile-info">
-          <span className="db-profile-name">Ibu Sari</span>
-          <span className="db-profile-role">Wali Kelas XII IPA 1</span>
-        </div>
-        <div className="db-avatar">SR</div>
+                    <span className="db-profile-name">{profile.nama || 'Ibu Sari'}</span>
+                    <span className="db-profile-role">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'}</span>
+                </div>
+                <div className="db-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
       </div>
     </header>
   );
@@ -330,6 +331,17 @@ function RiskTable({ students, loading }) {
 
 /* ── Main page ─────────────────────────────────────────────────── */
 export default function DashboardPage() {
+    const [profile, setProfile] = React.useState({});
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) setProfile(res.data.data);
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
+
   const [activePage, setActivePage] = useState('dashboard');
   const navigate = useNavigate();
 
@@ -371,19 +383,21 @@ export default function DashboardPage() {
 
   const handleNavigate = (id) => {
     setActivePage(id);
-    if (id === 'prediksi') navigate('/prediksi-siswa');
-    if (id === 'dashboard') navigate('/dashboard');
-    if (id === 'nilai') navigate('/data-nilai');
-    if (id === 'monitoring') navigate('/monitoring-kelas');
-    if (id === 'tambah-siswa') navigate('/tambah-siswa');
-    if (id === 'statistik') navigate('/statistik-snbp');
-    if (id === 'ekspor') navigate('/ekspor-data');
-    if (id === 'notifikasi-settings') navigate('/notifikasi');
-    if (id === 'pengaturan') navigate('/pengaturan');
+    if (id === 'prediksi') navigate('/guru/prediksi-siswa');
+    if (id === 'dashboard') navigate('/guru/dashboard');
+    if (id === 'nilai') navigate('/guru/data-nilai');
+    if (id === 'monitoring') navigate('/guru/monitoring-kelas');
+    if (id === 'tambah-siswa') navigate('/guru/tambah-siswa');
+    if (id === 'statistik') navigate('/guru/statistik-snbp');
+    if (id === 'ekspor') navigate('/guru/ekspor-data');
+    if (id === 'notifikasi-settings') navigate('/guru/notifikasi');
+    if (id === 'pengaturan') navigate('/guru/pengaturan');
     if (id === 'keluar') {
       localStorage.removeItem('token');
       localStorage.removeItem('role');
-      navigate('/');
+      navigate('/', {
+        replace: true
+      });
     }
   };
 
@@ -424,7 +438,7 @@ export default function DashboardPage() {
       <Sidebar active={activePage} onNavigate={handleNavigate} />
 
       <div className="db-main">
-        <Topbar aiStatus={aiStatus} />
+        <Topbar aiStatus={aiStatus}  profile={profile} />
 
         <main className="db-content">
           {/* Stat cards */}

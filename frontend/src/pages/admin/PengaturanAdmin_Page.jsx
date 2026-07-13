@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import './PengaturanAdmin_Page.css';
@@ -7,10 +7,10 @@ function PengaturanAdmin_Page() {
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [profile, setProfile] = useState({ nama: 'Bapak Hartono', email: '{profile.email}', role: 'admin' });
+    const [profile, setProfile] = useState({ nama: "ADMIN", email: 'admin@sman1yk.sch.id', role: 'admin' });
     const [editForm, setEditForm] = useState({});
 
-    React.useEffect(() => {
+    useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const res = await api.get('/users/profile');
@@ -32,7 +32,11 @@ function PengaturanAdmin_Page() {
     };
 
     const handleLogout = () => {
-        navigate('/');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/', {
+            replace: true
+        });
     };
 
     const infoSistem = [
@@ -42,6 +46,8 @@ function PengaturanAdmin_Page() {
         { label: 'Total pengguna aktif', value: '41', valueClass: 'pga-val-bold' },
         { label: 'Sekolah', value: 'SMA Negeri 1 Yogyakarta', valueClass: 'pga-val-bold' },
     ];
+
+    const user = profile;
 
     return (
         <div className="pga-container">
@@ -143,10 +149,10 @@ function PengaturanAdmin_Page() {
                     </div>
                     <div className="dbs-profile-info">
                         <div className="dbs-profile-text">
-                            <span className="dbs-profile-name">{profile.nama || 'Bapak Hartono'}</span>
-                            <span className="dbs-profile-role">Kepala Sekolah</span>
+                            <span className="dbs-profile-name">{user.nama || 'ADMIN'}</span>
+                            <span className="dbs-profile-role">{user.role || (user.role === 'admin' ? 'Administrator' : 'Kepala Sekolah')}</span>
                         </div>
-                        <div className="dbs-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'HT'}</div>
+                        <div className="dbs-avatar">{user.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                     </div>
                 </header>
 
@@ -160,9 +166,9 @@ function PengaturanAdmin_Page() {
 
                             {/* Avatar + Nama */}
                             <div className="pga-profile-head">
-                                <div className="pga-avatar-lg">HT</div>
+                                <div className="pga-avatar-lg">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'AD'}</div>
                                 <div>
-                                    <p className="pga-profile-name">Bapak Hartono, M.Pd</p>
+                                    <p className="pga-profile-name">{profile.nama || 'ADMIN'}</p>
                                     <p className="pga-profile-role">Kepala Sekolah · Administrator</p>
                                 </div>
                             </div>
@@ -171,7 +177,7 @@ function PengaturanAdmin_Page() {
                             <div className="pga-info-list">
                                 <div className="pga-info-row">
                                     <span className="pga-info-label">Email</span>
-                                    <span className="pga-info-val pga-val-link">kepala@sman1yk.sch.id</span>
+                                    <span className="pga-info-val pga-val-link">{profile.email || 'admin@sman1yk.sch.id'}</span>
                                 </div>
                                 <div className="pga-info-row">
                                     <span className="pga-info-label">Level akses</span>
@@ -188,12 +194,14 @@ function PengaturanAdmin_Page() {
                             </div>
 
                             {/* Edit Button */}
-                            <button
-                                className="pga-edit-btn"
-                                onClick={() => { if (!isEditing) { setEditForm({ ...profile, password: '' }); setIsEditing(true); } else setIsEditing(false); }}
-                            >
-                                {isEditing ? 'Simpan profil' : 'Edit profil'}
-                            </button>
+                            <div style={{ marginTop: '20px' }}>
+                                <button
+                                    className="pga-edit-btn"
+                                    onClick={() => { setEditForm({ ...profile, password: '' }); setIsEditing(true); }}
+                                >
+                                    Edit profil
+                                </button>
+                            </div>
                         </section>
 
                         {/* ---- RIGHT: Info Sistem ---- */}
@@ -215,6 +223,33 @@ function PengaturanAdmin_Page() {
                     </div>
                 </main>
             </div>
+
+            {/* Modal Edit Profil */}
+            {isEditing && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: '90%', maxWidth: '400px' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Edit Profil</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Nama</label>
+                                <input type="text" value={editForm.nama || ''} onChange={e => setEditForm({ ...editForm, nama: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Email</label>
+                                <input type="email" value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Password Baru (Opsional)</label>
+                                <input type="password" value={editForm.password || ''} onChange={e => setEditForm({ ...editForm, password: e.target.value })} placeholder="Kosongkan jika tidak ingin diubah" style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                            <button onClick={() => setIsEditing(false)} style={{ background: '#f1f5f9', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Batal</button>
+                            <button onClick={handleSaveProfile} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Simpan</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

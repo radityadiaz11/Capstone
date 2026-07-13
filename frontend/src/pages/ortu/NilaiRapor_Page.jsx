@@ -8,10 +8,13 @@ function NilaiRapor_Page() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    navigate('/');
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    navigate('/', { replace: true });
   };
 
   const [student, setStudent] = useState(null);
+  const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,6 +23,10 @@ function NilaiRapor_Page() {
         const res = await api.get('/students');
         if (res.data.success && res.data.data.length > 0) {
           setStudent(res.data.data[0]);
+        }
+        const resProfile = await api.get('/users/profile');
+        if (resProfile.data.success) {
+          setProfile(resProfile.data.data);
         }
       } catch (error) {
         console.error('Error fetching student data:', error);
@@ -31,30 +38,34 @@ function NilaiRapor_Page() {
   }, []);
 
   const s = student || {};
-  const examScore = s.exam_score || 0;
-  
-  // Rata-rata semester lalu (mock logic based on current score to show trend)
-  const prevScore = (examScore * 1.1).toFixed(0);
-
-  // Data nilai siswa from API
-  const grades = [
+  const gradesRaw = [
     { subject: 'Matematika', score: s.math_score || 0, prevScore: Math.round((s.math_score || 0) * 1.05), status: (s.math_score || 0) < 75 ? 'Berisiko' : 'Aman' },
     { subject: 'Bahasa Indonesia', score: s.indo_score || 0, prevScore: Math.round((s.indo_score || 0) * 1.02), status: (s.indo_score || 0) < 75 ? 'Berisiko' : 'Aman' },
     { subject: 'Biologi', score: s.bio_score || 0, prevScore: Math.round((s.bio_score || 0) * 0.95), status: (s.bio_score || 0) < 75 ? 'Berisiko' : 'Aman' },
     { subject: 'Kimia', score: s.chem_score || 0, prevScore: Math.round((s.chem_score || 0) * 1.1), status: (s.chem_score || 0) < 75 ? 'Berisiko' : 'Aman' },
     { subject: 'Fisika', score: s.phy_score || 0, prevScore: Math.round((s.phy_score || 0) * 1.08), status: (s.phy_score || 0) < 75 ? 'Berisiko' : 'Aman' },
     { subject: 'Bahasa Inggris', score: s.eng_score || 0, prevScore: Math.round((s.eng_score || 0) * 0.98), status: (s.eng_score || 0) < 75 ? 'Berisiko' : 'Aman' },
-  ].filter(g => g.score > 0);
+  ];
+  const grades = gradesRaw.filter(g => g.score > 0);
+
+  const avgRapor = grades.length > 0 
+      ? grades.reduce((acc, curr) => acc + curr.score, 0) / grades.length 
+      : 0;
+
+  const examScore = s.exam_score ? s.exam_score : avgRapor;
+
+  // Rata-rata semester lalu (mock logic based on current score to show trend)
+  const prevScore = (examScore * 1.1).toFixed(0);
 
   const highestGrade = grades.length > 0 ? grades.reduce((max, g) => g.score > max.score ? g : max, grades[0]) : null;
   const lowestGrade = grades.length > 0 ? grades.reduce((min, g) => g.score < min.score ? g : min, grades[0]) : null;
 
   // Data tren nilai per semester based on exam score
   const trendData = [
-    { sem: 'Sem 1', value: Math.min(100, Math.round(examScore * 1.25)) },
-    { sem: 'Sem 2', value: Math.min(100, Math.round(examScore * 1.2)) },
-    { sem: 'Sem 3', value: Math.min(100, Math.round(examScore * 1.15)) },
-    { sem: 'Sem 4', value: Math.min(100, Math.round(examScore * 1.1)) },
+    { sem: 'Sem 1', value: Math.min(100, Math.round(examScore * 0.8)) },
+    { sem: 'Sem 2', value: Math.min(100, Math.round(examScore * 0.85)) },
+    { sem: 'Sem 3', value: Math.min(100, Math.round(examScore * 0.9)) },
+    { sem: 'Sem 4', value: Math.min(100, Math.round(examScore * 0.95)) },
     { sem: 'Sem 5', value: Math.round(examScore) },
   ];
 
@@ -170,10 +181,10 @@ function NilaiRapor_Page() {
 
           <div className="nr-profile-info">
             <div className="nr-profile-text">
-              <span className="nr-profile-name">Bapak Hidayat</span>
-              <span className="nr-profile-role">Orang Tua Farhan</span>
+              <span className="nr-profile-name">{profile.nama || 'ORANG TUA'}</span>
+              <span className="nr-profile-role">{profile.role === 'ortu' ? 'Orang Tua' : (profile.role || 'Orang Tua')}</span>
             </div>
-            <div className="nr-avatar">HN</div>
+            <div className="nr-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'OT'}</div>
           </div>
         </header>
 
@@ -265,7 +276,7 @@ function NilaiRapor_Page() {
                 </div>
 
                 <div className="nr-chart-desc">
-                  {examScore < 60 ? 'Tren nilai terus menurun — segera ambil tindakan' : 'Performa stabil/meningkat — pertahankan!'}
+                  {examScore >= 75 ? 'Tren nilai terus membaik — pertahankan performa' : (examScore < 60 ? 'Tren nilai terus menurun — segera ambil tindakan' : 'Performa stabil/meningkat — pertahankan!')}
                 </div>
               </div>
             </section>

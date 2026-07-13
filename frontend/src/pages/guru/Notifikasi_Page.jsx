@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css'; // Premium shell and sidebar styles
 import './Notifikasi_Page.css';
@@ -80,7 +81,7 @@ function Sidebar({ active, onNavigate }) {
   );
 }
 
-function Topbar({ title = 'Notifikasi', subtitle = 'Sistem otomatis memantau perubahan akademik' }) {
+function Topbar({ title = 'Notifikasi', subtitle = 'Sistem otomatis memantau perubahan akademik', profile = {} }) {
   return (
     <header className="db-topbar notif-topbar">
       <div className="db-topbar-left notif-topbar-left">
@@ -92,29 +93,40 @@ function Topbar({ title = 'Notifikasi', subtitle = 'Sistem otomatis memantau per
       </div>
       <div className="db-topbar-right">
         <div className="db-profile-info">
-          <span className="db-profile-name">Ibu Sari</span>
-          <span className="db-profile-role">Wali Kelas XII IPA 1</span>
-        </div>
-        <div className="db-avatar">SR</div>
+                    <span className="db-profile-name">{profile.nama || 'Ibu Sari'}</span>
+                    <span className="db-profile-role">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'}</span>
+                </div>
+                <div className="db-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
       </div>
     </header>
   );
 }
 
 export default function Notifikasi_Page() {
+    const [profile, setProfile] = React.useState({});
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/users/profile');
+                if (res.data.success) setProfile(res.data.data);
+            } catch (err) {}
+        };
+        fetchProfile();
+    }, []);
+
   const navigate = useNavigate();
 
   const handleNavigate = (id) => {
-    if (id === 'dashboard') navigate('/dashboard');
-    if (id === 'prediksi') navigate('/prediksi-siswa');
-    if (id === 'nilai') navigate('/data-nilai');
-    if (id === 'monitoring') navigate('/monitoring-kelas');
-    if (id === 'tambah-siswa') navigate('/tambah-siswa');
-    if (id === 'statistik') navigate('/statistik-snbp');
-    if (id === 'ekspor') navigate('/ekspor-data');
-    if (id === 'notifikasi-settings') navigate('/notifikasi');
-    if (id === 'pengaturan') navigate('/pengaturan');
-    if (id === 'keluar') navigate('/');
+    if (id === 'dashboard') navigate('/guru/dashboard');
+    if (id === 'prediksi') navigate('/guru/prediksi-siswa');
+    if (id === 'nilai') navigate('/guru/data-nilai');
+    if (id === 'monitoring') navigate('/guru/monitoring-kelas');
+    if (id === 'tambah-siswa') navigate('/guru/tambah-siswa');
+    if (id === 'statistik') navigate('/guru/statistik-snbp');
+    if (id === 'ekspor') navigate('/guru/ekspor-data');
+    if (id === 'notifikasi-settings') navigate('/guru/notifikasi');
+    if (id === 'pengaturan') navigate('/guru/pengaturan');
+    if (id === 'keluar') { localStorage.removeItem('token'); localStorage.removeItem('role'); navigate('/', { replace: true }); }
   };
 
   const notificationItems = [
@@ -124,7 +136,7 @@ export default function Notifikasi_Page() {
       message: 'Farhan Hidayat mengalami penurunan nilai dari 65.3 → 58.1. Periksa kondisi siswa.',
       meta: '1 jam yang lalu · Klik untuk lihat detail',
       icon: '📉',
-      link: '/detail-siswa'
+      link: '/guru/detail-siswa'
     },
     {
       id: 3,
@@ -158,13 +170,13 @@ export default function Notifikasi_Page() {
       <Sidebar active="notifikasi-settings" onNavigate={handleNavigate} />
 
       <div className="db-main">
-        <Topbar />
+        <Topbar  profile={profile} />
 
         <main className="db-content notif-content-wrapper">
           <div className="notif-list-container">
             {notificationItems.map((item) => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 className={`notif-card notif-card-${item.type} ${item.link ? 'clickable' : ''}`}
                 onClick={() => item.link && navigate(item.link)}
               >

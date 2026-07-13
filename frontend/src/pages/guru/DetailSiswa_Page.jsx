@@ -81,24 +81,24 @@ function Sidebar({ active, onNavigate }) {
   );
 }
 
-function Topbar({ title = 'Detail Siswa', onBack }) {
+function Topbar({ title = 'Detail Siswa', onBack, profile = {} }) {
   return (
     <header className="db-topbar" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
       <div className="db-topbar-left" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
         <h1 className="db-page-title" style={{ margin: 0 }}>{title}</h1>
         {onBack && (
-          <button 
-            onClick={onBack} 
-            className="db-back-link" 
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              color: '#3b82f6', 
-              fontSize: '12.5px', 
-              padding: 0, 
-              cursor: 'pointer', 
-              textAlign: 'left', 
-              marginTop: '2px', 
+          <button
+            onClick={onBack}
+            className="db-back-link"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#3b82f6',
+              fontSize: '12.5px',
+              padding: 0,
+              cursor: 'pointer',
+              textAlign: 'left',
+              marginTop: '2px',
               display: 'block',
               fontWeight: 500
             }}
@@ -108,11 +108,11 @@ function Topbar({ title = 'Detail Siswa', onBack }) {
         )}
       </div>
       <div className="db-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div className="db-profile-info" style={{ textAlign: 'right' }}>
-          <span className="db-profile-name" style={{ display: 'block', fontWeight: 600, fontSize: '13.5px' }}>Ibu Sari</span>
-          <span className="db-profile-role" style={{ display: 'block', fontSize: '11.5px', color: '#64748b' }}>Wali Kelas XII IPA 1</span>
-        </div>
-        <div className="db-avatar">SR</div>
+        <div className="db-profile-info">
+                    <span className="db-profile-name">{profile.nama || 'Ibu Sari'}</span>
+                    <span className="db-profile-role">Wali Kelas {profile.mengampu_kelas || 'XII IPA 1'}</span>
+                </div>
+                <div className="db-avatar">{profile.nama ? profile.nama.substring(0, 2).toUpperCase() : 'SR'}</div>
       </div>
     </header>
   );
@@ -120,6 +120,17 @@ function Topbar({ title = 'Detail Siswa', onBack }) {
 
 const DetailSiswa_Page = () => {
   const navigate = useNavigate();
+  const [profile, setProfile] = React.useState({});
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/users/profile');
+        if (res.data.success) setProfile(res.data.data);
+      } catch (err) {}
+    };
+    fetchProfile();
+  }, []);
+
   const [searchParams] = useSearchParams();
   const studentId = searchParams.get('id');
 
@@ -143,7 +154,7 @@ const DetailSiswa_Page = () => {
         const res = await api.get(`/students/${studentId}`);
         if (res.data.success) {
           setStudent(res.data.data);
-          
+
           // If student has warnings/predictions, use latest
           const data = res.data.data;
           if (data.riwayatPrediksi && data.riwayatPrediksi.length > 0) {
@@ -196,19 +207,19 @@ const DetailSiswa_Page = () => {
   };
 
   const handleNavigate = (id) => {
-    if (id === 'dashboard') navigate('/dashboard');
-    if (id === 'prediksi') navigate('/prediksi-siswa');
-    if (id === 'nilai') navigate('/data-nilai');
-    if (id === 'monitoring') navigate('/monitoring-kelas');
-    if (id === 'tambah-siswa') navigate('/tambah-siswa');
-    if (id === 'statistik') navigate('/statistik-snbp');
-    if (id === 'ekspor') navigate('/ekspor-data');
-    if (id === 'notifikasi-settings') navigate('/notifikasi');
-    if (id === 'pengaturan') navigate('/pengaturan');
+    if (id === 'dashboard') navigate('/guru/dashboard');
+    if (id === 'prediksi') navigate('/guru/prediksi-siswa');
+    if (id === 'nilai') navigate('/guru/data-nilai');
+    if (id === 'monitoring') navigate('/guru/monitoring-kelas');
+    if (id === 'tambah-siswa') navigate('/guru/tambah-siswa');
+    if (id === 'statistik') navigate('/guru/statistik-snbp');
+    if (id === 'ekspor') navigate('/guru/ekspor-data');
+    if (id === 'notifikasi-settings') navigate('/guru/notifikasi');
+    if (id === 'pengaturan') navigate('/guru/pengaturan');
     if (id === 'keluar') {
       localStorage.removeItem('token');
       localStorage.removeItem('role');
-      navigate('/');
+      navigate('/', { replace: true });
     }
   };
 
@@ -217,7 +228,7 @@ const DetailSiswa_Page = () => {
       <div className="db-shell">
         <Sidebar active="prediksi" onNavigate={handleNavigate} />
         <div className="db-main">
-          <Topbar title="Detail Siswa" onBack={() => navigate('/prediksi-siswa')} />
+          <Topbar profile={profile} title="Detail Siswa" onBack={() => navigate('/prediksi-siswa')} />
           <main className="db-content">
             <div className="db-skeleton-block" style={{ height: '120px' }}></div>
             <div className="db-mid-row">
@@ -235,7 +246,7 @@ const DetailSiswa_Page = () => {
       <div className="db-shell">
         <Sidebar active="prediksi" onNavigate={handleNavigate} />
         <div className="db-main">
-          <Topbar title="Detail Siswa" onBack={() => navigate('/prediksi-siswa')} />
+          <Topbar profile={profile} title="Detail Siswa" onBack={() => navigate('/prediksi-siswa')} />
           <main className="db-content">
             <div className="db-empty-state" style={{ minHeight: '300px' }}>
               <span style={{ fontSize: '48px' }}>🔍</span>
@@ -251,7 +262,7 @@ const DetailSiswa_Page = () => {
   const examScore = student.exam_score || 0;
   const status = examScore < 20 ? 'Berisiko' : examScore < 40 ? 'Perhatian' : 'Siap';
   const avatarInitials = (student.nama || 'XX').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  
+
   const subjects = [
     { name: 'Matematika', score: student.math_score || 0 },
     { name: 'Bahasa Indonesia', score: student.indo_score || 0 },
@@ -274,11 +285,11 @@ const DetailSiswa_Page = () => {
       {/* Main Area */}
       <div className="db-main">
         {/* Unified Topbar with Back Navigation */}
-        <Topbar title="Detail Siswa" onBack={() => navigate('/prediksi-siswa')} />
+        <Topbar profile={profile} title="Detail Siswa" onBack={() => navigate('/prediksi-siswa')} />
 
         {/* Content Area */}
         <main className="db-content detail-content-wrapper">
-          
+
           {/* 1. Student Header Card */}
           <div className="student-detail-header-card">
             <div className="sdh-left">
@@ -357,7 +368,7 @@ const DetailSiswa_Page = () => {
 
           {/* 3. Grid for Subject Scores & Stats/Actions */}
           <div className="db-mid-row detail-grid-row">
-            
+
             {/* Left Card: Nilai per mata pelajaran */}
             <div className="db-card detail-subjects-card">
               <div className="db-card-header">
@@ -372,8 +383,8 @@ const DetailSiswa_Page = () => {
                     <div className="db-progress-track">
                       <div
                         className="db-progress-fill"
-                        style={{ 
-                          width: `${subj.score}%`, 
+                        style={{
+                          width: `${subj.score}%`,
                           background: subj.score >= 75 ? '#2563eb' : '#ef4444'
                         }}
                       />
@@ -390,13 +401,13 @@ const DetailSiswa_Page = () => {
 
             {/* Right Cards Stack: Statistik & Aksi Guru */}
             <div className="detail-right-stack" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
+
               {/* Card 1: Statistik siswa */}
               <div className="db-card detail-stats-card">
                 <div className="db-card-header" style={{ marginBottom: '14px' }}>
                   <span className="db-card-title">Statistik siswa</span>
                 </div>
-                
+
                 <div className="detail-stats-list">
                   <div className="detail-stat-row">
                     <span className="ds-label">Exam Score</span>
@@ -422,7 +433,7 @@ const DetailSiswa_Page = () => {
                 <div className="db-card-header" style={{ marginBottom: '14px' }}>
                   <span className="db-card-title">✨ Rekomendasi AI</span>
                 </div>
-                
+
                 {narasi ? (
                   <div className="ai-narasi-content">
                     <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#334155', margin: 0 }}>
@@ -434,8 +445,8 @@ const DetailSiswa_Page = () => {
                   </div>
                 ) : (
                   <div className="detail-action-buttons">
-                    <button 
-                      className="teacher-action-btn" 
+                    <button
+                      className="teacher-action-btn"
                       type="button"
                       onClick={handleFetchNarasi}
                       disabled={narasiLoading}
